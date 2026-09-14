@@ -28,6 +28,7 @@ const clients: Client[] = []
 const nameList: string[] = []
 
 new Elysia()
+    .get('/', () => {console.log("server started")})
     .use(html()) // only needed for local server, cloudflare has its own way of serving the page
     .use(
         staticPlugin({
