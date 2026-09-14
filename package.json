@@ -6,6 +6,7 @@
     "dev": "bun run --watch server/src/index.ts"
   },
   "dependencies": {
+    "@elysia/html": "^1.4.1",
     "@elysia/static": "^1.4.11",
     "babylonjs": "^9.21.2",
     "babylonjs-gui": "^9.23.0",
