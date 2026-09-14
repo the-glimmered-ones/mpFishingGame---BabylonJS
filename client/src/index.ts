@@ -36,7 +36,7 @@ gameFrame.srcdoc =  `
         <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
         <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
         <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
-        <script src=https://the-glimmered-ones.github.io/multiplayer-boat-game/game.js type=module></script>
+        <script src="./client/build/game.js" type=module></script>
 
 
     </head>
