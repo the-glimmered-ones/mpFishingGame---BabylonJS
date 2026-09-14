@@ -27,7 +27,7 @@ if (cluster.isPrimary) {
   	for (let i = 0; i < os.availableParallelism(); i++)
     	cluster.fork()
 } else {
-  	await import('server/src/index.ts')
+  	await import('./server/src/index.ts')
   	console.log(`Worker ${process.pid} started`)
 }
 
