@@ -1,0 +1,78 @@
+web game
+multiplayer or bots
+top down, io-like game
+what has been done?
+snake-likes: 
+
+
+
+defeating others -> get bigger - anyone's game
+-slitherio, powerline.io, agar, hole, paper, jumpar
+
+defeating others -> get more powerful/efficient (stat upgrades) - more complex and strategic
+-diep, deeeep, arraw, narwhals
+-xp, leveling up, common xp sources besides players to keep it moving
+
+gather resources -> get more powerful -> defeat players
+-moomoo (tower defense), survev (br)
+
+it is possible to create a community (rip jumpar)
+-allow downtime and space to chill
+-less action focused, exploration? - worked together to et outside map
+-supply means of defense, but don't require it
+-some kind of chat feature, doesn't have to be global
+
+outliers
+-ev.io, krunker (fps)
+-skribbl
+
+
+survival is always at the core
+always growing in power, size, or efficiency
+most are somewhat abstract
+
+pirate ships firing at each other across an ocean?
+
+
+open map to see coordinates and landmarks
+-find own location, or show player's general area?
+--mark nearby landmarks in ocean to triangulate / view estimated location on map
+-map updates as you explore or trade for it
+-4 or 5 colored buoys to mark locations, once placed on map they appear in the ocean.
+-port towns to trade or sell have a special icon when discovered
+
+manage boat view, zoom out to see ocean and players
+trawler - fishing, sell for good $ or trade to others. what would others have in return? cast in wake of other boat for higher fish chance
+most boats would have fishing ability, trawler is much more efficient
+sailboat - explorer, trade filled out sections of the map as you travel
+submarine - sonar and torpedoes, manually reload. provides defense, gets what
+all boats have small range defensive gear for common enemies, eg harpoons, so they dont *need* a sub for defense. these are used in the boat view, or just ram em
+barge? - low value bulk material or large pieces of something
+-dredger - excavation of the seafloor, for construction or mineral deposits; damages environment - exclude this type or create cleanup crew?, rare treasures, can be depleted and respawns somewhere else
+pollution damages fishing value, developing dead zones, test o2 levels (hot/cold system)
+zone can be saved, but less fish for a certain time after. if it dies, it must be fully cleaned and wait a while for it to come back. dead zones appear as black on the map. global danger meter for a section is visible on hud or by water color
+
+why would we clean that zone when theres so many more?:
+-sections hold different fish types (split into tiers) with different sell prices
+-prevent the spread of the pollution to rarer fish areas
+what does cleanup look like?:
+-mark area with buoy in case supplies need to be bought
+-idk actually this requires research
+
+what is the game loop?:
+get money from harvested or traded fish
+use money to upgrade boat efficiency or move speed
+use money to buy materials for job, blank maps, fishing nets, torpedoes, cleanup gear, etc
+work together to explore map, 
+
+defense from what besides pther players
+-sharks, jellyfish, 
+-kraken (boss) - special global pin appears on map
+
+ocean currents, whirlpools
+
+ship customization:
+name it on creation
+custom flag and custom colors
+
+freely steer and rotate from the rudder

@@ -1,0 +1,4 @@
+{
+    "code-runner.customCommand": "bun run build.js; bun run dev",
+    "code-runner.defaultLanguage": "javascript"
+}

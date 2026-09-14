@@ -1,0 +1,23 @@
+{
+  "name": "mpFishingGame",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch server/src/index.ts"
+  },
+  "dependencies": {
+    "@elysia/static": "^1.4.11",
+    "babylonjs": "^9.21.2",
+    "babylonjs-gui": "^9.23.0",
+    "babylonjs-loaders": "^9.21.2",
+    "babylonjs-materials": "^9.21.2",
+    "babylonjs-post-process": "^9.21.2",
+    "babylonjs-serializers": "^9.22.1",
+    "elysia": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}
