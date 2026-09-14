@@ -10,7 +10,6 @@ Bun.build({
     
 });
 
-
 Bun.build({
     entrypoints: ["client/src/index.html"],//, "client/src/game.html"], 
     target: 'browser',
