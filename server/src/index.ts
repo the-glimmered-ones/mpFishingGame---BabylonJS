@@ -28,7 +28,7 @@ const clients: Client[] = []
 const nameList: string[] = []
 console.log("server file reached")
 
-await new Elysia()
+new Elysia()
     .use(html()) // only needed for local server, cloudflare has its own way of serving the page
     .use(
         staticPlugin({
