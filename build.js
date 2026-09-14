@@ -18,6 +18,7 @@ Bun.build({
     //minify: true,
 });
 
+
 const startFolder = "client/src/textures/"
 const endFolder = "client/build/textures/"
 await mkdir(endFolder, buildPaths)
