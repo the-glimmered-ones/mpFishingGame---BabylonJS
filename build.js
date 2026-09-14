@@ -64,5 +64,6 @@ async function buildPaths() {
         }
     }
 }
+console.log("build complete")
 //await Bun.write(Bun.stdout, Bun.file("client/src/textures/boat.png"))
 
