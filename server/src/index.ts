@@ -28,7 +28,7 @@ const clients: Client[] = []
 const nameList: string[] = []
 
 new Elysia()
-    // .use(html())
+    // .use(html()) // only needed for local server, cloudflare has its own way of serving the page
     .use(
         staticPlugin({
             assets: 'client/build',
