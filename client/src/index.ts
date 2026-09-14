@@ -4,7 +4,7 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 //import * as Game from "https://the-glimmered-ones.github.io/multiplayer-boat-game/game.ts";
 //Game.setJoinedWithName()
 
-export const ws: WebSocket = new WebSocket("http://localhost:2323")
+export const ws: WebSocket = new WebSocket("https://mpfishinggame.sbthompson429.workers.dev/")//"http://localhost:2323")
 
 function getWebsocket(){
     return ws;

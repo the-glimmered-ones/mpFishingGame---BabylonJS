@@ -125,7 +125,7 @@ new Elysia()
         }
     },
 )
-.listen(2323)
+.listen("https://mpfishinggame.sbthompson429.workers.dev/")//2323
 
 setInterval(serverTick, 15)
 

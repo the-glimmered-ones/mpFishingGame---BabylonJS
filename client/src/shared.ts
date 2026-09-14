@@ -1,7 +1,7 @@
 import { GlobalClientLocation } from "@shared/Consts"
 //import * as Game from "@src/game"
 
-export const ws: WebSocket = new WebSocket("http://localhost:2323")
+//export const ws: WebSocket = new WebSocket("http://localhost:2323")
 
 // export function setPlayerHasJoined(value: boolean){
 //     console.log("shared")
