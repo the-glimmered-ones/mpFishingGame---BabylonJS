@@ -128,7 +128,8 @@ await new Elysia()
 )
 .listen(2323)//"https://mpfishinggame.sbthompson429.workers.dev/")
 
-setInterval(serverTick, 15)
+if (nameList.length > 0)
+    setInterval(serverTick, 15)
 
 async function serverTick(){
 //TODO: send out all ship info to every player, even unnamed ones
