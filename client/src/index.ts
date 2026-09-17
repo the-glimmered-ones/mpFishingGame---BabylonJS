@@ -4,7 +4,7 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 //import * as Game from "https://the-glimmered-ones.github.io/multiplayer-boat-game/game.ts";
 //Game.setJoinedWithName()
 
-export const ws: WebSocket = new WebSocket("ws://mpfishinggame.sbthompson429.workers.dev:2323")//"https://mpfishinggame.sbthompson429.workers.dev/")
+export const ws: WebSocket = new WebSocket("ws://localhost:2323")//"ws://mpfishinggame.sbthompson429.workers.dev:2323")//"https://mpfishinggame.sbthompson429.workers.dev/")
 
 function getWebsocket(){
     return ws;
@@ -15,40 +15,40 @@ function requestWs(window: Window) {
     console.log("game window is " + gameWindow)
 }
 
-const gameFrame: HTMLIFrameElement = <HTMLIFrameElement>document.getElementById("gameFrame")
-gameFrame.srcdoc =  `
-<html>
-    <head>
-        <style>
-        html, body, canvas{ 
-            width: 100%;
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background: #000; 
-        }
-        </style>
-        <script src="https://cdn.babylonjs.com/babylon.js"></script>
-        <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
-        <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-        <script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
-        <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
-        <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
-        <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
-        <script src="./client/build/game.js" type=module></script>
-
-
-    </head>
-    <body>
-        <canvas id=renderCanvas></canvas>
-    </body>
-</html>`;//module doesn't accept ts >:(
-let gameFrameDoc = gameFrame.contentWindow
-// gameFrameDoc?.addEventListener("load", () => {
-//     alert("shart")
-//     gameFrameDoc.ws = ws
-// })
+var gameFrameWindow: Window
+const gameModule = await import("./game.js")
+addEventListener("load", async () => {
+    const gameFrame: HTMLIFrameElement = <HTMLIFrameElement>document.getElementById("gameFrame")
+    gameFrameWindow = <Window>gameFrame.contentWindow
+    gameFrameWindow.name = "gameFrameWindow"
+    gameFrame.srcdoc =  `
+    <html>
+        <head>
+            <style>
+            html, body, canvas{ 
+                width: 100%;
+                height: 100%; 
+                margin: 0; 
+                padding: 0; 
+                overflow: hidden; 
+                background: #000; 
+                flex-direction: none;
+            }
+            </style>         
+        </head>
+        <body>
+            <canvas id=renderCanvas disabled></canvas>
+            
+        </body>
+    </html>`;//<script src="${import("./game.js")}" type=module></script> //loads in index again
+    //module doesn't accept ts >:(
+    //only type module accepts imports/exports
+    (async function linkGameToIFrame() { // i need to run this code under game frame, load has already completed
+        //console.log(self)
+        gameModule.linkWsToGame(gameFrameWindow, ws)
+    }).call(gameFrame.contentDocument)
+    
+})
 
 
 const nameInput: HTMLInputElement = <HTMLInputElement>document.getElementById("nameInput");
@@ -131,9 +131,9 @@ ws.addEventListener("message", (event) => {
         case ServerPacketTypes.JOIN_ACCEPTED:
             console.log("hidden")
 
-            if (gameFrameDoc && gameFrameDoc.document.scripts.length != 0){
-                if (typeof gameFrameDoc.setJoinedWithName === "function"){
-                    gameFrameDoc.setJoinedWithName(true)
+            if (gameModule && gameFrameWindow){
+                if (typeof gameModule.setJoinedWithName === "function"){
+                    gameModule.setJoinedWithName.call(gameFrameWindow, true)
                     console.log("joined with name")
                 }
                 
@@ -142,10 +142,10 @@ ws.addEventListener("message", (event) => {
             break
         case ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS:
              const playerPositions: GlobalClientLocation[] = msg.data
-             if (gameFrameDoc && gameFrameDoc.document.scripts.length != 0){
+             if (gameModule && gameFrameWindow){
                 for (let player of playerPositions){
                     if (player.name != name)
-                        gameFrameDoc.addOtherBoat(player)
+                        gameModule.addOtherBoat.call(gameFrameWindow, player)
                 }
             }
             break

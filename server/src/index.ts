@@ -1,10 +1,7 @@
-// import Elysia from "elysia";
-// import { html } from '@elysia/html'
-// import { staticPlugin } from '@elysia/static'
 import { ShipTypes, PlayerLocation, GlobalClientLocation } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
-import * as mainPage from "@build/index.html"
-
+import page from "@build/index.html"
+import { readdir } from "node:fs/promises";
 
 class Client {
     ws: any
@@ -28,24 +25,41 @@ class ClientData {
 const clients: Client[] = [] 
 const nameList: string[] = []
 console.log("server file reached")
+const HOST_NAME = "localhost"
+const PORT = 2323
+const TEXTURE_PATH = "./client/build/textures/"
+const textures = await readdir(TEXTURE_PATH, {withFileTypes: true})
 
 Bun.serve({
-    port: 2323,
-    hostname: "mpfishinggame.sbthompson429.workers.dev",
+    port: PORT,
+    hostname: HOST_NAME,
     routes: {
-        "/": mainPage
+        "/": page,
+        "/textures/*": ( {url} ) => {
+            
+            //get text after textures: index of "/textures/" plus its length
+            let filePath = url.slice(url.indexOf("/textures/") + "/textures/".length)
+            console.log(filePath)
+            //if filePath is found in textures, respond with the file
+            const foundTexture = textures.find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
+            console.log(foundTexture)
+            if (foundTexture){
+                return new Response(Bun.file(TEXTURE_PATH + filePath))
+            }
+        }
     },
-    fetch(req, server) {
-    // upgrade the request to a WebSocket
-    if (server.upgrade(req, { data: { client: new Client() } })) {
-      return; // do not return a Response
-    }
-    return new Response("Upgrade failed", { status: 500 });
-  },
+    async fetch(req, server) {
+        // upgrade the request to a WebSocket
+        if (server.upgrade(req, { data: { client: new Client() } })) {
+            return; // do not return a Response
+        }
+        return new Response("Upgrade failed", { status: 500 });
+    },
+    error(error) {
+        return new Response(`Error: ${error.message}`, { status: 404 });
+    },
   websocket: {
-    data: {
-        client: new Client()
-    },
+    data: {} as { client: Client },
     open: (ws) => {
             console.log(clients.length)
             //TODO: only add clients when sure its not just gonna disappear, after name submit? set a timeout?

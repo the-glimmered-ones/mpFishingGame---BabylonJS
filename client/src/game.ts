@@ -8,13 +8,11 @@
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation } from "@shared/Consts"; 
 //import { ws } from "@src/shared";
-var ws: WebSocket;
+var ws: WebSocket = new WebSocket("");
+var iframe: Window = window.self;
 //fixed loading times by hosting this file online and importing it when needed
 
-const BABYLON = window.BABYLON;
-
-const startWindow = window.parent //TODO this is in the iframe, so it should be treated and referenced as the child to prevent weirdness
-const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('renderCanvas');
+let canvas: HTMLCanvasElement = document.createElement("canvas")
 //console.log(canvas)
 
 let engine: BABYLON.Engine | null = null;
@@ -24,28 +22,28 @@ var camera: BABYLON.FollowCamera;
 export var gameLoaded: boolean = false
 var joinedWithName: boolean;
 
+let BOAT_Y_POSITION: number;
+let BOAT_SCALE: BABYLON.Vector3;
+let BOAT_STARTING_ROTATION: BABYLON.Vector3;
+export function linkWsToGame(frame: Window, webSocket: WebSocket){
+  ws.close()
+  ws = webSocket
+  canvas = <HTMLCanvasElement>(iframe.window.document.body.children[0])
+  //console.log(frame.window.document.body.children)
+  iframe = frame
+  //console.log(window.document.scripts)
+  BOAT_Y_POSITION = 5
+  BOAT_SCALE = new BABYLON.Vector3(5,5,5)
+  BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0)
+  startGame()
+}
+
 export function setJoinedWithName(value: boolean){
-  console.log("set true")
+  //console.log("set true")
   joinedWithName = true
   setInterval(queueClientAction, 15)
 }
 
-
-document.addEventListener("load", () => {
-  window.parent.alert("shart") // YAYYYYYYYYY ... why broke now ... FIEXDDDDDD
-  //console.log("game loaded")
-  //requestWs.call(window.parent, window) 
-  //TODO: find a way to pass itself to the main window as described in #5: https://stackoverflow.com/a/251645
-})
-
-function requestWs(window: Window) {
-  let gameWindow = window 
-  console.log("game window is " + gameWindow)
-}
-
-const BOAT_Y_POSITION = 5
-const BOAT_SCALE = new BABYLON.Vector3(5,5,5)
-const BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0)
 function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var scene: BABYLON.Scene = new BABYLON.Scene(engine);
     console.log("scene created")
@@ -75,7 +73,7 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     ground.material = groundMaterial;
 
     var waterMesh = BABYLON.CreateGround("waterMesh", { width: 512, height: 512, subdivisions: 32}, scene);
-    var water = new WaterMaterial("water", scene);
+    var water = new BABYLON.WaterMaterial("water", scene);
     water.bumpTexture = new BABYLON.Texture("textures/waterbump.png", scene);
     water.windForce = 15;
     water.waveHeight = 0.6;
@@ -125,9 +123,8 @@ return scene;
 
 var boatMesh: BABYLON.Mesh
 var sceneMeshes: BABYLON.ISceneLoaderAsyncResult;
-const githubSrc =  "https://github.com/the-glimmered-ones/multiplayer-boat-game/tree/318830bbfc462dc9976751e62f7494207e59bbba/textures/"
 async function loadBoatMesh(scene: BABYLON.Scene){
-    sceneMeshes = (await BABYLON.ImportMeshAsync(githubSrc + "boat-placeholder.obj", scene));
+    sceneMeshes = (await BABYLON.ImportMeshAsync("textures/boat-placeholder.obj", scene));
     for (let mesh of sceneMeshes.meshes){
       if (mesh.name == 'BOAT'){
         boatMesh = <BABYLON.Mesh>mesh
@@ -171,24 +168,27 @@ export function addOtherBoat(player: GlobalClientLocation){
 
 //https://stackoverflow.com/questions/251420/invoking-javascript-code-in-an-iframe-from-the-parent-page
 //https://www.reddit.com/r/javascript/comments/657ma6/attempting_to_call_parent_function_from_iframe_is/
-if (ws){//parent.getWebsocket()){
+async function startGame(){//parent.getWebsocket()){
   ws.addEventListener("open", async () => {
-    if (!engine) {
-      engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    }
+    //if (engine == null) {
+    canvas = <HTMLCanvasElement>(iframe.window.document.body.children[0])
+    engine = new BABYLON.Engine(canvas, true); //,{ preserveDrawingBuffer: true, stencil: true });
+    //}
 
     let createScene = createWaterScene;// || mod.default;
     // if (!createScene && mod.Playground?.CreateScene) createScene = (e,c)=>mod.Playground.CreateScene(e,c);
     if (!createScene) throw new Error('No createScene() export found.');
 
     console.log("made here")
-
-    const scene = await (createWaterScene(engine, canvas));
+    //console.log(iframe.window.document.body.children)
+    const scene = await createWaterScene(engine, canvas);
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
-    scene.debugLayer.show()
+    //scene.debugLayer.show()
     joinedWithName = false
+    console.log("scene drawn")
+    addKeyListeners()
     // //this stopped it from rendering
     // if (typeof createWaterScene === 'function') {
     //   try { engine = await createWaterScene; } catch {}
@@ -295,45 +295,49 @@ function decelerate(reversing: boolean){
 }
 
 const pressedMoveKeys: Array<string> = []
-window.addEventListener("keydown", (event) => {
-//w/up = go forward, left/right = turn, down = slowly back up
-//change view = space, attack = shift, map = tab
-  const key = event.key
-  //console.log(key)
-  console.log(gameLoaded, joinedWithName)
-  if (gameLoaded && joinedWithName){
-    actionParams = [];
-    pressedMoveKeys.splice(0)
-    if(key == "a" || pressedMoveKeys.includes(key)){
-      actionParams[0] = "W";
-    }
-    else if(key == "d" || pressedMoveKeys.includes(key)){
-      actionParams[0] = "E";
-    }
-    else{
-      actionParams[0] = "";
-    }
+function addKeyListeners(){
+  console.log("added listeners")
+  canvas.addEventListener("keydown", (event) => {
+  //w/up = go forward, left/right = turn, down = slowly back up
+  //change view = space, attack = shift, map = tab
+    const key = event.key
+    //console.log(key)
+    console.log(gameLoaded, joinedWithName)
+    if (gameLoaded && joinedWithName){
+      actionParams = [];
+      pressedMoveKeys.splice(0)
+      if(key == "a" || pressedMoveKeys.includes(key)){
+        actionParams[0] = "W";
+      }
+      else if(key == "d" || pressedMoveKeys.includes(key)){
+        actionParams[0] = "E";
+      }
+      else{
+        actionParams[0] = "";
+      }
 
-    if(key == "w" || pressedMoveKeys.includes(key)){
-      actionParams[1] = "N";
+      if(key == "w" || pressedMoveKeys.includes(key)){
+        actionParams[1] = "N";
+      }
+      else if(key == "s" || pressedMoveKeys.includes(key)){
+        actionParams[1] = "S";
+      }
+      else{
+        actionParams[1] = "";
+      }
+      currentAction = moveBoat
+      pressedMoveKeys.push(key)
     }
-    else if(key == "s" || pressedMoveKeys.includes(key)){
-      actionParams[1] = "S";
-    }
-    else{
-      actionParams[1] = "";
-    }
-    currentAction = moveBoat
-    pressedMoveKeys.push(key)
-  }
-})
+  })
 
-window.addEventListener("keyup", (event) => {
-  const key = event.key
-  if (pressedMoveKeys.includes(key)){
-    pressedMoveKeys.splice(pressedMoveKeys.indexOf(key), 1)
-  }
-})
+  canvas.addEventListener("keyup", (event) => {
+    const key = event.key
+    if (pressedMoveKeys.includes(key)){
+      pressedMoveKeys.splice(pressedMoveKeys.indexOf(key), 1)
+    }
+  })
+
+}
 
 function setCameraPosRelativeToBoat(){
   if (boatObj.rotation.y > Math.PI){

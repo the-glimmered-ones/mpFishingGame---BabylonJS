@@ -21,29 +21,34 @@ class PlayerLocation {
 }
 
 // client/src/game.ts
-var ws;
-var BABYLON = window.BABYLON;
-var startWindow = window.parent;
-var canvas = document.getElementById("renderCanvas");
+var ws = new WebSocket("");
+var iframe = window.self;
+var canvas = document.createElement("canvas");
 var engine = null;
 var boatRoot;
 var boatObj;
 var camera;
 var gameLoaded = false;
 var joinedWithName;
+var BOAT_Y_POSITION;
+var BOAT_SCALE;
+var BOAT_STARTING_ROTATION;
+function linkWsToGame(frame, webSocket) {
+  ws.close();
+  ws = webSocket;
+  canvas = iframe.window.document.body.children[0];
+  iframe = frame;
+  BOAT_Y_POSITION = 5;
+  BOAT_SCALE = new BABYLON.Vector3(5, 5, 5);
+  BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0);
+  startGame();
+}
 function setJoinedWithName(value) {
-  console.log("set true");
   joinedWithName = true;
   setInterval(queueClientAction, 15);
 }
-document.addEventListener("load", () => {
-  window.parent.alert("shart");
-});
-var BOAT_Y_POSITION = 5;
-var BOAT_SCALE = new BABYLON.Vector3(5, 5, 5);
-var BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0);
-function createWaterScene(engine2, canvas2) {
-  var scene = new BABYLON.Scene(engine2);
+function createWaterScene(engine, canvas) {
+  var scene = new BABYLON.Scene(engine);
   console.log("scene created");
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
@@ -65,7 +70,7 @@ function createWaterScene(engine2, canvas2) {
   ground.position.y = -1;
   ground.material = groundMaterial;
   var waterMesh = BABYLON.CreateGround("waterMesh", { width: 512, height: 512, subdivisions: 32 }, scene);
-  var water = new WaterMaterial("water", scene);
+  var water = new BABYLON.WaterMaterial("water", scene);
   water.bumpTexture = new BABYLON.Texture("textures/waterbump.png", scene);
   water.windForce = 15;
   water.waveHeight = 0.6;
@@ -82,9 +87,8 @@ function createWaterScene(engine2, canvas2) {
 }
 var boatMesh;
 var sceneMeshes;
-var githubSrc = "https://github.com/the-glimmered-ones/multiplayer-boat-game/tree/318830bbfc462dc9976751e62f7494207e59bbba/textures/";
 async function loadBoatMesh(scene) {
-  sceneMeshes = await BABYLON.ImportMeshAsync(githubSrc + "boat-placeholder.obj", scene);
+  sceneMeshes = await BABYLON.ImportMeshAsync("textures/boat-placeholder.obj", scene);
   for (let mesh of sceneMeshes.meshes) {
     if (mesh.name == "BOAT") {
       boatMesh = mesh;
@@ -92,7 +96,7 @@ async function loadBoatMesh(scene) {
     }
   }
 }
-function addBoat(mesh, pos, scale, rotation, camera2) {
+function addBoat(mesh, pos, scale, rotation, camera) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
   var boatMat;
   boatObj = mesh;
@@ -103,22 +107,21 @@ function addBoat(mesh, pos, scale, rotation, camera2) {
   boatRoot.position = pos;
   boatRoot.scaling = scale;
   boatObj.rotation = rotation;
-  if (camera2) {
-    camera2.position = new BABYLON.Vector3(0, 30, -3);
-    camera2.setTarget(new BABYLON.Vector3(0, -10, -3));
-    camera2.fov = 1.1;
-    camera2.parent = boatRoot;
+  if (camera) {
+    camera.position = new BABYLON.Vector3(0, 30, -3);
+    camera.setTarget(new BABYLON.Vector3(0, -10, -3));
+    camera.fov = 1.1;
+    camera.parent = boatRoot;
   }
   console.log(boatRoot);
 }
 function addOtherBoat(player) {
   addBoat(boatMesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0));
 }
-if (ws) {
+async function startGame() {
   ws.addEventListener("open", async () => {
-    if (!engine) {
-      engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    }
+    canvas = iframe.window.document.body.children[0];
+    engine = new BABYLON.Engine(canvas, true);
     let createScene = createWaterScene;
     if (!createScene)
       throw new Error("No createScene() export found.");
@@ -131,8 +134,9 @@ if (ws) {
         engine.resize();
       }
     });
-    scene.debugLayer.show();
     joinedWithName = false;
+    console.log("scene drawn");
+    addKeyListeners();
   });
 }
 var acceleration = 0.2;
@@ -206,36 +210,39 @@ function decelerate(reversing) {
   }
 }
 var pressedMoveKeys = [];
-window.addEventListener("keydown", (event) => {
-  const key = event.key;
-  console.log(gameLoaded, joinedWithName);
-  if (gameLoaded && joinedWithName) {
-    actionParams = [];
-    pressedMoveKeys.splice(0);
-    if (key == "a" || pressedMoveKeys.includes(key)) {
-      actionParams[0] = "W";
-    } else if (key == "d" || pressedMoveKeys.includes(key)) {
-      actionParams[0] = "E";
-    } else {
-      actionParams[0] = "";
+function addKeyListeners() {
+  console.log("added listeners");
+  canvas.addEventListener("keydown", (event) => {
+    const key = event.key;
+    console.log(gameLoaded, joinedWithName);
+    if (gameLoaded && joinedWithName) {
+      actionParams = [];
+      pressedMoveKeys.splice(0);
+      if (key == "a" || pressedMoveKeys.includes(key)) {
+        actionParams[0] = "W";
+      } else if (key == "d" || pressedMoveKeys.includes(key)) {
+        actionParams[0] = "E";
+      } else {
+        actionParams[0] = "";
+      }
+      if (key == "w" || pressedMoveKeys.includes(key)) {
+        actionParams[1] = "N";
+      } else if (key == "s" || pressedMoveKeys.includes(key)) {
+        actionParams[1] = "S";
+      } else {
+        actionParams[1] = "";
+      }
+      currentAction = moveBoat;
+      pressedMoveKeys.push(key);
     }
-    if (key == "w" || pressedMoveKeys.includes(key)) {
-      actionParams[1] = "N";
-    } else if (key == "s" || pressedMoveKeys.includes(key)) {
-      actionParams[1] = "S";
-    } else {
-      actionParams[1] = "";
+  });
+  canvas.addEventListener("keyup", (event) => {
+    const key = event.key;
+    if (pressedMoveKeys.includes(key)) {
+      pressedMoveKeys.splice(pressedMoveKeys.indexOf(key), 1);
     }
-    currentAction = moveBoat;
-    pressedMoveKeys.push(key);
-  }
-});
-window.addEventListener("keyup", (event) => {
-  const key = event.key;
-  if (pressedMoveKeys.includes(key)) {
-    pressedMoveKeys.splice(pressedMoveKeys.indexOf(key), 1);
-  }
-});
+  });
+}
 var currentAction = () => {};
 var actionParams = [];
 var delta;
@@ -264,5 +271,6 @@ async function queueClientAction() {
 export {
   addOtherBoat,
   gameLoaded,
+  linkWsToGame,
   setJoinedWithName
 };

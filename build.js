@@ -1,17 +1,12 @@
 /*build into one html file. all linked js/ts scripts are set to <script> tags.
 bun run build.js; bun run dev
 */
-import { read, mkdir } from "node:fs";
+import { mkdir } from "node:fs";
 import { readdir } from "node:fs/promises";
-
-// import cluster from 'node:cluster'
-// import os from 'node:os'
-// import process from 'node:process'
 
 Bun.build({
     entrypoints: ["client/src/game.ts"],//, "client/src/game.html"], 
     outdir: 'client/build/',
-    
 });
 
 Bun.build({
@@ -21,16 +16,6 @@ Bun.build({
     outdir: 'client/build/',
     //minify: true,
 });
-
-// //run server in parallel
-// if (cluster.isPrimary) {
-//   	for (let i = 0; i < os.availableParallelism(); i++)
-//     	cluster.fork()
-// } else {
-//   	await import('./server/src/index.ts')
-//   	console.log(`Worker ${process.pid} started`)
-// }
-
 
 const startFolder = "client/src/textures/"
 const endFolder = "client/build/textures/"
