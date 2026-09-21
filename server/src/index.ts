@@ -28,20 +28,21 @@ console.log("server file reached")
 const HOST_NAME = "localhost"
 const PORT = 2323
 const TEXTURE_PATH = "./client/build/textures/"
-const textures = await readdir(TEXTURE_PATH, {withFileTypes: true})
 
 Bun.serve({
     port: PORT,
     hostname: HOST_NAME,
     routes: {
         "/": page,
-        "/textures/*": ( {url} ) => {
+        "/textures/*": async ( {url} ) => {
             
             //get text after textures: index of "/textures/" plus its length
             let filePath = url.slice(url.indexOf("/textures/") + "/textures/".length)
             console.log(filePath)
-            //if filePath is found in textures, respond with the file
-            const foundTexture = textures.find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
+            //if filePath is found in textures, respond with the file //cf doesn't like node -- 
+            //https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryEntry/createReader - use this 
+            const foundTexture = (await readdir(TEXTURE_PATH, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
+            //getDirectory(TEXTURE_PATH).createReader()
             console.log(foundTexture)
             if (foundTexture){
                 return new Response(Bun.file(TEXTURE_PATH + filePath))
