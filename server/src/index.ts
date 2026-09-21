@@ -27,25 +27,40 @@ const nameList: string[] = []
 console.log("server file reached")
 const HOST_NAME = "localhost"
 const PORT = 2323
-const TEXTURE_PATH = "./client/build/textures/"
+const TEXTURE_PATH = "./shared/textures/"
+const SUB_TEXTURE_PATH = "./shared/textures/TropicalSunnyDay/"
 
 Bun.serve({
     port: PORT,
     hostname: HOST_NAME,
     routes: {
         "/": page,
+        "/textures/TropicalSunnyDay/*": async ( {url} ) => {
+    
+            let filePath = url.slice(url.indexOf("/textures/TropicalSunnyDay/") + "/textures/TropicalSunnyDay/".length)
+            console.log(filePath)
+            const foundTexture = (await readdir(SUB_TEXTURE_PATH, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
+            console.log(foundTexture)
+            if (foundTexture){
+                return new Response(Bun.file(SUB_TEXTURE_PATH + filePath))
+            }
+            else{
+                return new Response("404 not found")
+            }
+        },
         "/textures/*": async ( {url} ) => {
             
             //get text after textures: index of "/textures/" plus its length
             let filePath = url.slice(url.indexOf("/textures/") + "/textures/".length)
             console.log(filePath)
-            //if filePath is found in textures, respond with the file //cf doesn't like node -- 
             //https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryEntry/createReader - use this 
             const foundTexture = (await readdir(TEXTURE_PATH, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
-            //getDirectory(TEXTURE_PATH).createReader()
             console.log(foundTexture)
             if (foundTexture){
                 return new Response(Bun.file(TEXTURE_PATH + filePath))
+            }
+            else{
+                return new Response("404 not found")
             }
         }
     },
