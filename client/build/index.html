@@ -66,7 +66,7 @@
         <h1 style="margin-top:5px; margin-bottom:15px;">Boat Game</h1>
         <div style="display: block;" id="contentArea">
             <div class="chooseShipOverlay gameSize" id="chooseShipOverlay">
-            <table class="gameSize" style="height: fit-content; width: fit-content; align-self: center; background-color: antiquewhite; box-shadow: 5px 3px 2px; visibility: inherit;">
+            <table style="height: fit-content; width: fit-content; align-self: center; background-color: antiquewhite; box-shadow: 5px 3px 2px; visibility: inherit; padding: 10px">
                 <tr style="visibility: inherit;">
                     <td><button class="newBtnStyle selectShipBtns" id="selectSailboat" style="visibility: inherit;">Sailboat</button></td>
                     <td><button class="newBtnStyle selectShipBtns" id="selectTrawler" style="visibility: inherit;">Trawler</button></td>
@@ -74,7 +74,7 @@
                 </tr>
                 <tr>
                     <td></td>
-                    <td><div style="padding: 5px 10px; width: 200px; text-align: left;">
+                    <td><div style="padding: 5px 10px; width: 200px; text-align: left; margin:10px 0px">
                         <label for="nameInput">Name:</label>
                         <input type="text" id="nameInput" name="nameInput">
                     </div></td>
@@ -88,17 +88,21 @@
             <!--<canvas class="gameSize" id="gameArea"></canvas>-->
             <iframe class="gameSize" id="gameFrame" title="Ship Game"></iframe><!--src="water.html" src="game.html"-->
         </div>
-    <script type="module">var __esm = (fn, res, err) => () => {
-  if (fn)
-    try {
-      res = fn(fn = 0);
-    } catch (e) {
-      err = [e];
-    }
-  if (err)
-    throw err[0];
-  return res;
+    <script type="module">var __defProp = Object.defineProperty;
+var __returnValue = (v) => v;
+function __exportSetter(name, newValue) {
+  this[name] = __returnValue.bind(null, newValue);
+}
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: __exportSetter.bind(all, name)
+    });
 };
+var __esm = (fn, res) => () => (fn && (res = fn(fn = 0)), res);
 
 // shared/Consts.ts
 class PlayerLocation {
@@ -109,6 +113,15 @@ class PlayerLocation {
     this.position = position;
     this.angle = angle;
     this.velocity = velocity;
+  }
+}
+
+class ChatMessage {
+  name = "";
+  msg = "";
+  constructor(name, msg) {
+    this.name = name;
+    this.msg = msg;
   }
 }
 var init_Consts = () => {};
@@ -125,6 +138,13 @@ class ClientPacket {
 var init_PacketTypes = () => {};
 
 // client/src/game.ts
+var exports_game = {};
+__export(exports_game, {
+  setJoinedWithName: () => setJoinedWithName,
+  linkWsToGame: () => linkWsToGame,
+  gameLoaded: () => gameLoaded,
+  addOtherBoat: () => addOtherBoat
+});
 function linkWsToGame(frame, webSocket) {
   ws.close();
   ws = webSocket;
@@ -135,12 +155,13 @@ function linkWsToGame(frame, webSocket) {
   BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0);
   startGame();
 }
-function setJoinedWithName(value) {
+function setJoinedWithName(joinName) {
   joinedWithName = true;
+  name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine, canvas) {
-  var scene = new BABYLON.Scene(engine);
+function createWaterScene(engine2, canvas2) {
+  var scene = new BABYLON.Scene(engine2);
   console.log("scene created");
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
@@ -178,18 +199,19 @@ function createWaterScene(engine, canvas) {
   return scene;
 }
 function setupUI() {
+  const body = iframe.document.body;
   const ui_minimap = iframe.document.createElement("button");
   const minimap_img = iframe.document.createElement("img");
   minimap_img.src = "textures/ui/minimap.png";
   ui_minimap.appendChild(minimap_img);
-  ui_minimap.style.height, minimap_img.style.height = "30vh";
+  ui_minimap.style.height, minimap_img.style.height = "28vh";
   ui_minimap.style.width, minimap_img.style.width = "auto";
   ui_minimap.style.position = "absolute";
   ui_minimap.style.left = "0px";
   ui_minimap.style.padding = "0";
   ui_minimap.style.backgroundColor = "transparent";
   ui_minimap.style.border = "none";
-  iframe.document.body.appendChild(ui_minimap);
+  body.appendChild(ui_minimap);
   ui_minimap.style.bottom = "-4px";
   minimap_img.toggleAttribute("inert");
   minimap_img.tabIndex, ui_minimap.tabIndex = -1;
@@ -201,7 +223,7 @@ function setupUI() {
   ui_map.style.backgroundColor = "transparent";
   ui_map.style.height = "100vh";
   ui_map.style.width = "100vw";
-  iframe.document.body.appendChild(ui_map);
+  body.appendChild(ui_map);
   ui_map.style.backgroundImage = "url(textures/ui/map-bg.png)";
   ui_map.style.backgroundRepeat = "no-repeat";
   ui_map.style.backgroundSize = "98vw 92vh";
@@ -213,6 +235,7 @@ function setupUI() {
   exit_map_img.style.width = "12vw";
   exit_map_img.style.height, ui_exit_map.style.width, ui_exit_map.style.height = "auto";
   ui_exit_map.appendChild(exit_map_img);
+  ui_map.style.visibility = "hidden";
   ui_map.appendChild(ui_exit_map);
   ui_exit_map.style.position = "absolute";
   ui_exit_map.style.left = "4vw";
@@ -229,15 +252,13 @@ function setupUI() {
   });
   const ui_chat_table = iframe.document.createElement("table");
   ui_chat_table.innerHTML = `
-  <tr>
-  <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-size: cover; background-position: top right; padding: 0">
-    <div id="chatbox-container" style="width: 100%; height: 100%">
-      <input type="text" placeholder="say somethings">
-    </div></td>
-  <td style="padding: 0">
-    <button id="send-chat" style="background-color: transparent; border: none; padding: 0; height:100%;">
-      <img src="textures/ui/send-chat.png" style="height:100%;" />
-    </button>
+  <tr style="display: flex">
+  <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-position: top right;background-size: 100% 100%;">
+      <input id="chat-box" type="text" placeholder="say somethings" style="margin:8px 15px;width: 30vw;height: 3vh">
+    </td>
+  <td style="background-image:url('textures/ui/send-chat.png');background-repeat: no-repeat;background-position: top right;background-size: 100% 100%;">
+    <button id="send-chat" style="background-color: transparent; border: none; margin: 5px; width: 5vw; height: stretch;color: antiqueWhite;font-weight: bold;">
+    Send</button>
   </td>
   </tr>`;
   ui_chat_table.style.position = "absolute";
@@ -245,7 +266,38 @@ function setupUI() {
   ui_chat_table.style.bottom = "0px";
   ui_chat_table.style.border = "none";
   ui_chat_table.style.padding = "0";
-  iframe.document.body.appendChild(ui_chat_table);
+  ui_chat_table.style.display = "flex";
+  ui_chat_table.style.borderSpacing = "2";
+  body.appendChild(ui_chat_table);
+  const sendChatButton = iframe.document.getElementById("send-chat");
+  const chatBox = iframe.document.getElementById("chat-box");
+  const chatDisplay = iframe.document.createElement("div");
+  chatDisplay.innerHTML = `
+  <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: relative; top: 0px; right: 0px;">04:19PM</span>
+  <br>hello my name is ${name}.
+  `;
+  chatDisplay.style.backgroundColor = "antiqueWhite";
+  chatDisplay.style.border = "1px solid black";
+  chatDisplay.style.width = chatBox.style.width;
+  chatDisplay.style.position = "absolute";
+  body.appendChild(chatDisplay);
+  sendChatButton.addEventListener("click", () => {
+    sendChat(chatBox.value);
+    chatBox.value = "";
+  });
+  chatBox.addEventListener("keyup", (event) => {
+    if (event.key == "Enter") {
+      sendChat(chatBox.value);
+      chatBox.value = "";
+    }
+  }, { capture: true });
+}
+function sendChat(msg) {
+  if (msg == "") {
+    return;
+  }
+  chatHistory.push(new ChatMessage(name, msg));
+  console.log(msg);
 }
 function toggleMap(hideElem, showElem) {
   hideElem.style.visibility = "hidden";
@@ -260,7 +312,7 @@ async function loadBoatMesh(scene) {
     }
   }
 }
-function addBoat(mesh, pos, scale, rotation, camera) {
+function addBoat(mesh, pos, scale, rotation, camera2) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
   var boatMat;
   boatObj = mesh;
@@ -271,11 +323,11 @@ function addBoat(mesh, pos, scale, rotation, camera) {
   boatRoot.position = pos;
   boatRoot.scaling = scale;
   boatObj.rotation = rotation;
-  if (camera) {
-    camera.position = new BABYLON.Vector3(0, 30, -3);
-    camera.setTarget(new BABYLON.Vector3(0, -10, -3));
-    camera.fov = 1.1;
-    camera.parent = boatRoot;
+  if (camera2) {
+    camera2.position = new BABYLON.Vector3(0, 30, -3);
+    camera2.setTarget(new BABYLON.Vector3(0, -10, -3));
+    camera2.fov = 1.1;
+    camera2.parent = boatRoot;
   }
   console.log(boatRoot);
 }
@@ -402,6 +454,7 @@ function addKeyListeners() {
     }
   });
 }
+function updateVisibleChatHistory() {}
 async function queueClientAction() {
   if (gameLoaded) {
     delta = engine.getDeltaTime() / 1000;
@@ -422,15 +475,17 @@ async function queueClientAction() {
     await currentAction();
     currentAction = () => {};
     actionParams = [];
+    updateVisibleChatHistory();
   }
 }
-var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, boatMesh, sceneMeshes, acceleration = 0.2, MAX_VELOCITY = 2, velocity = 0, rotSpeed = 0.087, moveNS = 0, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
+var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", boatMesh, sceneMeshes, acceleration = 0.2, MAX_VELOCITY = 2, velocity = 0, rotSpeed = 0.087, moveNS = 0, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
 var init_game = __esm(() => {
   init_PacketTypes();
   init_Consts();
   ws = new WebSocket("");
   iframe = window.self;
   canvas = document.createElement("canvas");
+  chatHistory = [];
   pressedMoveKeys = [];
   actionParams = [];
 });
@@ -440,7 +495,7 @@ init_Consts();
 init_PacketTypes();
 var ws2 = new WebSocket("ws://localhost:2323");
 var gameFrameWindow;
-var gameModule = await Promise.resolve().then(() => (init_game(), {}));
+var gameModule = await Promise.resolve().then(() => (init_game(), exports_game));
 addEventListener("load", async () => {
   const gameFrame = document.getElementById("gameFrame");
   gameFrameWindow = gameFrame.contentWindow;
@@ -466,7 +521,7 @@ addEventListener("load", async () => {
         </body>
     </html>`;
   (async function linkGameToIFrame() {
-    linkWsToGame(gameFrameWindow, ws2);
+    gameModule.linkWsToGame(gameFrameWindow, ws2);
   }).call(gameFrame.contentDocument);
 });
 var nameInput = document.getElementById("nameInput");
@@ -521,12 +576,12 @@ for (let btn of shipSelectBtns) {
     }
   });
 }
-var name;
+var name2;
 var submitNameBtn = document.getElementById("submitNameBtn");
 submitNameBtn.addEventListener("click", () => {
-  name = nameInput.value;
-  if (name != "" && ship) {
-    ws2.send(JSON.stringify(new ClientPacket(1 /* JOIN_WITH_NAME */, name)));
+  name2 = nameInput.value;
+  if (name2 != "" && ship) {
+    ws2.send(JSON.stringify(new ClientPacket(1 /* JOIN_WITH_NAME */, name2)));
     console.log("join request sent");
   }
 });
@@ -541,8 +596,8 @@ ws2.addEventListener("message", (event) => {
     case 2 /* JOIN_ACCEPTED */:
       console.log("hidden");
       if (gameModule && gameFrameWindow) {
-        if (typeof setJoinedWithName === "function") {
-          setJoinedWithName.call(gameFrameWindow, true);
+        if (typeof gameModule.setJoinedWithName === "function") {
+          gameModule.setJoinedWithName.call(gameFrameWindow, name2);
           console.log("joined with name");
         }
       }
@@ -552,8 +607,8 @@ ws2.addEventListener("message", (event) => {
       const playerPositions = msg.data;
       if (gameModule && gameFrameWindow) {
         for (let player of playerPositions) {
-          if (player.name != name)
-            addOtherBoat.call(gameFrameWindow, player);
+          if (player.name != name2)
+            gameModule.addOtherBoat.call(gameFrameWindow, player);
         }
       }
       break;

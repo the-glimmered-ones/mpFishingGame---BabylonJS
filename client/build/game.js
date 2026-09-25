@@ -19,6 +19,14 @@ class PlayerLocation {
     this.velocity = velocity;
   }
 }
+class ChatMessage {
+  name = "";
+  msg = "";
+  constructor(name, msg) {
+    this.name = name;
+    this.msg = msg;
+  }
+}
 
 // client/src/game.ts
 var ws = new WebSocket("");
@@ -30,6 +38,7 @@ var boatObj;
 var camera;
 var gameLoaded = false;
 var joinedWithName;
+var chatHistory = [];
 var BOAT_Y_POSITION;
 var BOAT_SCALE;
 var BOAT_STARTING_ROTATION;
@@ -43,12 +52,14 @@ function linkWsToGame(frame, webSocket) {
   BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0);
   startGame();
 }
-function setJoinedWithName(value) {
+var name = "";
+function setJoinedWithName(joinName) {
   joinedWithName = true;
+  name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine, canvas) {
-  var scene = new BABYLON.Scene(engine);
+function createWaterScene(engine2, canvas2) {
+  var scene = new BABYLON.Scene(engine2);
   console.log("scene created");
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
@@ -86,18 +97,19 @@ function createWaterScene(engine, canvas) {
   return scene;
 }
 function setupUI() {
+  const body = iframe.document.body;
   const ui_minimap = iframe.document.createElement("button");
   const minimap_img = iframe.document.createElement("img");
   minimap_img.src = "textures/ui/minimap.png";
   ui_minimap.appendChild(minimap_img);
-  ui_minimap.style.height, minimap_img.style.height = "30vh";
+  ui_minimap.style.height, minimap_img.style.height = "28vh";
   ui_minimap.style.width, minimap_img.style.width = "auto";
   ui_minimap.style.position = "absolute";
   ui_minimap.style.left = "0px";
   ui_minimap.style.padding = "0";
   ui_minimap.style.backgroundColor = "transparent";
   ui_minimap.style.border = "none";
-  iframe.document.body.appendChild(ui_minimap);
+  body.appendChild(ui_minimap);
   ui_minimap.style.bottom = "-4px";
   minimap_img.toggleAttribute("inert");
   minimap_img.tabIndex, ui_minimap.tabIndex = -1;
@@ -109,7 +121,7 @@ function setupUI() {
   ui_map.style.backgroundColor = "transparent";
   ui_map.style.height = "100vh";
   ui_map.style.width = "100vw";
-  iframe.document.body.appendChild(ui_map);
+  body.appendChild(ui_map);
   ui_map.style.backgroundImage = "url(textures/ui/map-bg.png)";
   ui_map.style.backgroundRepeat = "no-repeat";
   ui_map.style.backgroundSize = "98vw 92vh";
@@ -121,6 +133,7 @@ function setupUI() {
   exit_map_img.style.width = "12vw";
   exit_map_img.style.height, ui_exit_map.style.width, ui_exit_map.style.height = "auto";
   ui_exit_map.appendChild(exit_map_img);
+  ui_map.style.visibility = "hidden";
   ui_map.appendChild(ui_exit_map);
   ui_exit_map.style.position = "absolute";
   ui_exit_map.style.left = "4vw";
@@ -137,15 +150,13 @@ function setupUI() {
   });
   const ui_chat_table = iframe.document.createElement("table");
   ui_chat_table.innerHTML = `
-  <tr>
-  <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-size: cover; background-position: top right; padding: 0">
-    <div id="chatbox-container" style="width: 100%; height: 100%">
-      <input type="text" placeholder="say somethings">
-    </div></td>
-  <td style="padding: 0">
-    <button id="send-chat" style="background-color: transparent; border: none; padding: 0; height:100%;">
-      <img src="textures/ui/send-chat.png" style="height:100%;" />
-    </button>
+  <tr style="display: flex">
+  <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-position: top right;background-size: 100% 100%;">
+      <input id="chat-box" type="text" placeholder="say somethings" style="margin:8px 15px;width: 30vw;height: 3vh">
+    </td>
+  <td style="background-image:url('textures/ui/send-chat.png');background-repeat: no-repeat;background-position: top right;background-size: 100% 100%;">
+    <button id="send-chat" style="background-color: transparent; border: none; margin: 5px; width: 5vw; height: stretch;color: antiqueWhite;font-weight: bold;">
+    Send</button>
   </td>
   </tr>`;
   ui_chat_table.style.position = "absolute";
@@ -153,7 +164,38 @@ function setupUI() {
   ui_chat_table.style.bottom = "0px";
   ui_chat_table.style.border = "none";
   ui_chat_table.style.padding = "0";
-  iframe.document.body.appendChild(ui_chat_table);
+  ui_chat_table.style.display = "flex";
+  ui_chat_table.style.borderSpacing = "2";
+  body.appendChild(ui_chat_table);
+  const sendChatButton = iframe.document.getElementById("send-chat");
+  const chatBox = iframe.document.getElementById("chat-box");
+  const chatDisplay = iframe.document.createElement("div");
+  chatDisplay.innerHTML = `
+  <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: relative; top: 0px; right: 0px;">04:19PM</span>
+  <br>hello my name is ${name}.
+  `;
+  chatDisplay.style.backgroundColor = "antiqueWhite";
+  chatDisplay.style.border = "1px solid black";
+  chatDisplay.style.width = chatBox.style.width;
+  chatDisplay.style.position = "absolute";
+  body.appendChild(chatDisplay);
+  sendChatButton.addEventListener("click", () => {
+    sendChat(chatBox.value);
+    chatBox.value = "";
+  });
+  chatBox.addEventListener("keyup", (event) => {
+    if (event.key == "Enter") {
+      sendChat(chatBox.value);
+      chatBox.value = "";
+    }
+  }, { capture: true });
+}
+function sendChat(msg) {
+  if (msg == "") {
+    return;
+  }
+  chatHistory.push(new ChatMessage(name, msg));
+  console.log(msg);
 }
 function toggleMap(hideElem, showElem) {
   hideElem.style.visibility = "hidden";
@@ -170,7 +212,7 @@ async function loadBoatMesh(scene) {
     }
   }
 }
-function addBoat(mesh, pos, scale, rotation, camera) {
+function addBoat(mesh, pos, scale, rotation, camera2) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
   var boatMat;
   boatObj = mesh;
@@ -181,11 +223,11 @@ function addBoat(mesh, pos, scale, rotation, camera) {
   boatRoot.position = pos;
   boatRoot.scaling = scale;
   boatObj.rotation = rotation;
-  if (camera) {
-    camera.position = new BABYLON.Vector3(0, 30, -3);
-    camera.setTarget(new BABYLON.Vector3(0, -10, -3));
-    camera.fov = 1.1;
-    camera.parent = boatRoot;
+  if (camera2) {
+    camera2.position = new BABYLON.Vector3(0, 30, -3);
+    camera2.setTarget(new BABYLON.Vector3(0, -10, -3));
+    camera2.fov = 1.1;
+    camera2.parent = boatRoot;
   }
   console.log(boatRoot);
 }
@@ -318,6 +360,7 @@ function addKeyListeners() {
     }
   });
 }
+function updateVisibleChatHistory() {}
 var currentAction = () => {};
 var actionParams = [];
 var delta;
@@ -341,11 +384,12 @@ async function queueClientAction() {
     await currentAction();
     currentAction = () => {};
     actionParams = [];
+    updateVisibleChatHistory();
   }
 }
 export {
-  addOtherBoat,
-  gameLoaded,
+  setJoinedWithName,
   linkWsToGame,
-  setJoinedWithName
+  gameLoaded,
+  addOtherBoat
 };

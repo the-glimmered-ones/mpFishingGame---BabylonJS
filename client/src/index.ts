@@ -133,7 +133,7 @@ ws.addEventListener("message", (event) => {
 
             if (gameModule && gameFrameWindow){
                 if (typeof gameModule.setJoinedWithName === "function"){
-                    gameModule.setJoinedWithName.call(gameFrameWindow, true)
+                    gameModule.setJoinedWithName.call(gameFrameWindow, name)
                     console.log("joined with name")
                 }
                 

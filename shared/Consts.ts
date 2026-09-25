@@ -29,3 +29,12 @@ export class GlobalClientLocation{
         this.name = name
     }
 }
+
+export class ChatMessage{
+    name: string = ""
+    msg: string = ""
+    constructor(name: string, msg: string){
+        this.name = name
+        this.msg = msg
+    }
+}

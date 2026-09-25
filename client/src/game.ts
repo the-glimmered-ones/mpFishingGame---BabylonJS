@@ -6,7 +6,7 @@
 // import "babylonjs-serializers";
 // import "babylonjs-gui";
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
-import { PlayerLocation, GlobalClientLocation } from "@shared/Consts"; 
+import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
 //import { ws } from "@src/shared";
 var ws: WebSocket = new WebSocket("");
 var iframe: Window = window.self;
@@ -21,6 +21,7 @@ var boatObj: BABYLON.Mesh;
 var camera: BABYLON.FollowCamera;
 export var gameLoaded: boolean = false
 var joinedWithName: boolean;
+const chatHistory: ChatMessage[] = []
 
 let BOAT_Y_POSITION: number;
 let BOAT_SCALE: BABYLON.Vector3;
@@ -37,10 +38,11 @@ export function linkWsToGame(frame: Window, webSocket: WebSocket){
   BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0)
   startGame()
 }
-
-export function setJoinedWithName(value: boolean){
+var name: string = ""
+export function setJoinedWithName(joinName: string){
   //console.log("set true")
   joinedWithName = true
+  name = joinName
   setInterval(queueClientAction, 10)
 }
 
@@ -122,18 +124,19 @@ return scene;
 }
 
 function setupUI(){
+  const body = iframe.document.body
   const ui_minimap = iframe.document.createElement("button")
   const minimap_img = iframe.document.createElement("img")
   minimap_img.src = "textures/ui/minimap.png"
   ui_minimap.appendChild(minimap_img)
-  ui_minimap.style.height, minimap_img.style.height = "30vh"
+  ui_minimap.style.height, minimap_img.style.height = "28vh"
   ui_minimap.style.width, minimap_img.style.width = "auto"
   ui_minimap.style.position = "absolute"
   ui_minimap.style.left = "0px"
   ui_minimap.style.padding = "0"
   ui_minimap.style.backgroundColor = "transparent"
   ui_minimap.style.border = "none"
-  iframe.document.body.appendChild(ui_minimap)
+  body.appendChild(ui_minimap)
   ui_minimap.style.bottom = "-4px"
   minimap_img.toggleAttribute("inert")
   minimap_img.tabIndex, ui_minimap.tabIndex = -1
@@ -146,7 +149,7 @@ function setupUI(){
   ui_map.style.backgroundColor = "transparent"
   ui_map.style.height = "100vh"
   ui_map.style.width = "100vw"
-  iframe.document.body.appendChild(ui_map)
+  body.appendChild(ui_map)
   ui_map.style.backgroundImage = "url(textures/ui/map-bg.png)"
   ui_map.style.backgroundRepeat = "no-repeat"
   ui_map.style.backgroundSize = "98vw 92vh"
@@ -159,6 +162,7 @@ function setupUI(){
   exit_map_img.style.width = "12vw"
   exit_map_img.style.height, ui_exit_map.style.width, ui_exit_map.style.height = "auto"
   ui_exit_map.appendChild(exit_map_img)
+  ui_map.style.visibility = "hidden"
   ui_map.appendChild(ui_exit_map)
   ui_exit_map.style.position = "absolute"
   ui_exit_map.style.left = "4vw"
@@ -173,15 +177,13 @@ function setupUI(){
 
   const ui_chat_table = iframe.document.createElement("table")
   ui_chat_table.innerHTML = `
-  <tr>
-  <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-size: cover; background-position: top right; padding: 0">
-    <div id="chatbox-container" style="width: 100%; height: 100%">
-      <input type="text" placeholder="say somethings">
-    </div></td>
-  <td style="padding: 0">
-    <button id="send-chat" style="background-color: transparent; border: none; padding: 0; height:100%;">
-      <img src="textures/ui/send-chat.png" style="height:100%;" />
-    </button>
+  <tr style="display: flex">
+  <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-position: top right;background-size: 100% 100%;">
+      <input id="chat-box" type="text" placeholder="say somethings" style="margin:8px 15px;width: 30vw;height: 3vh">
+    </td>
+  <td style="background-image:url('textures/ui/send-chat.png');background-repeat: no-repeat;background-position: top right;background-size: 100% 100%;">
+    <button id="send-chat" style="background-color: transparent; border: none; margin: 5px; width: 5vw; height: stretch;color: antiqueWhite;font-weight: bold;">
+    Send</button>
   </td>
   </tr>`
   ui_chat_table.style.position = "absolute"
@@ -189,9 +191,38 @@ function setupUI(){
   ui_chat_table.style.bottom = "0px"
   ui_chat_table.style.border = "none"
   ui_chat_table.style.padding = "0"
-  //ui_chat_table.style.borderSpacing = "0"
-  iframe.document.body.appendChild(ui_chat_table)
+  ui_chat_table.style.display = "flex"
+  ui_chat_table.style.borderSpacing = "2"
+  body.appendChild(ui_chat_table)
 
+  const sendChatButton: HTMLButtonElement = <HTMLButtonElement>iframe.document.getElementById("send-chat")
+  const chatBox: HTMLInputElement = <HTMLInputElement>iframe.document.getElementById("chat-box")
+  const chatDisplay: HTMLDivElement = iframe.document.createElement("div")
+  chatDisplay.innerHTML = `
+  <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: relative; top: 0px; right: 0px;">04:19PM</span>
+  <br>hello my name is ${name}.
+  `
+  chatDisplay.style.backgroundColor = "antiqueWhite"
+  chatDisplay.style.border = "1px solid black"
+  chatDisplay.style.width = chatBox.style.width
+  chatDisplay.style.position = "relative" //TODO
+  // chatDisplay.style.bottom = Math.round(chatBox.getBoundingClientRect().top).toString()
+  // chatDisplay.style.x = chatBox.getBoundingClientRect().x.toString()
+  body.appendChild(chatDisplay)
+
+  sendChatButton.addEventListener("click", () => { sendChat(chatBox.value); chatBox.value = ""; })
+  chatBox.addEventListener("keyup", (event) => {
+    if (event.key == "Enter"){
+      sendChat(chatBox.value); 
+      chatBox.value = "";
+    }
+  }, {"capture": true})
+}
+
+function sendChat(msg: string){
+  if (msg == "") { return; }
+  chatHistory.push(new ChatMessage(name, msg))
+  console.log(msg)
 }
 
 function toggleMap(hideElem: HTMLElement, showElem: HTMLElement){
@@ -429,6 +460,10 @@ function setCameraPosRelativeToBoat(){
   }
 }
 
+function updateVisibleChatHistory(){
+  
+}
+
 var currentAction: CallableFunction = () => {};
 var actionParams: Array<any> = [];
 var delta;// = (engine).getDeltaTime()/1000 
@@ -456,5 +491,7 @@ async function queueClientAction(){
     await currentAction()
     currentAction = () => {};
     actionParams = [];
+
+    updateVisibleChatHistory()
   }
 }
