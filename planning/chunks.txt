@@ -1,0 +1,23 @@
+const chunk size
+each chunk is water, land, or mixed
+do I want landmasses that big if you can't go on them; maybe just water, island
+chunk: "a8" (pos), "water" (type), [] (bounds in absolute world pos?)
+only load adjacent chunks?
+
+minimap needs to:
+display current chunk information
+provide estimate location with visual landmarks and chunk name
+open full map for everything else
+nearby players in chunk and what guild they belong to
+how do i map player pos onto minimap; just use global coords or have unique chunk coords?
+
+map needs to:
+all explored chunks, general boat traffic, events, ports and their wares
+options to hide poi and other optional info like chunk grids and names
+
+if you have mapping materials, copy into item that must be consumed before map exploration is updated, one held per ship except the mapping type
+consuming a map with areas you've already explored does nothing, maybe show warning if majority is already known?
+mapItem{
+    chunksExplored: ["a6", "a7", "b6"]
+    ask server if player is holding this item and if action is valid
+}

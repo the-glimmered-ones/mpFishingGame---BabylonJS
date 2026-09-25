@@ -65,7 +65,7 @@ use money to upgrade boat efficiency or move speed
 use money to buy materials for job, blank maps, fishing nets, torpedoes, cleanup gear, etc
 work together to explore map, 
 
-defense from what besides pther players
+defense from what besides other players
 -sharks, jellyfish, 
 -kraken (boss) - special global pin appears on map
 
