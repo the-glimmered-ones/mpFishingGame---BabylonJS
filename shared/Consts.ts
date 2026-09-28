@@ -33,6 +33,7 @@ export class GlobalClientLocation{
 export class ChatMessage{
     name: string = ""
     msg: string = ""
+    time: number[] = [new Date().getHours(), new Date().getMinutes()]
     constructor(name: string, msg: string){
         this.name = name
         this.msg = msg

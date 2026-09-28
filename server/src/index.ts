@@ -1,7 +1,9 @@
-import { ShipTypes, PlayerLocation, GlobalClientLocation } from "@shared/Consts";
+import { ShipTypes, PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 import page from "@build/index.html"
 import { readdir } from "node:fs/promises";
+import { englishRecommendedTransformers, RegExpMatcher, TextCensor, englishDataset } from 'obscenity';
+
 
 class Client {
     ws: any
@@ -28,6 +30,7 @@ console.log("server file reached")
 const HOST_NAME = "localhost"
 const PORT = 2323
 const TEXTURE_PATH = "./shared/textures/"
+const chatHistory: ChatMessage[] = []
 
 async function serveRes(url: string, subfolder: string = ""){
     let filePath = url.slice(url.indexOf("/textures/" + subfolder) + ("/textures/" + subfolder).length)
@@ -66,19 +69,19 @@ Bun.serve({
     open: (ws) => {
             console.log(clients.length)
             //TODO: only add clients when sure its not just gonna disappear, after name submit? set a timeout?
-            if (ws.data){
-                ws.data.client.ws = ws
-                var dupedClient: Client = new Client();
-                if (clients.find((client) => { dupedClient = client; return ws.remoteAddress == client.ws.remoteAddress; })){
-                    clients[clients.indexOf(dupedClient)] =  ws.data.client
-                    nameList[clients.indexOf(dupedClient)] = ws.data.client.name
-                    console.log("user replaced")
-                }
-                else{
+            if (ws.data){ //DISABLED DUPE REPLACEMENT FOR LOCAL TESTING
+                 ws.data.client.ws = ws
+            //     var dupedClient: Client = new Client();
+            //     if (clients.find((client) => { dupedClient = client; return ws.remoteAddress == client.ws.remoteAddress; })){
+            //         clients[clients.indexOf(dupedClient)] =  ws.data.client
+            //         nameList[clients.indexOf(dupedClient)] = ws.data.client.name
+            //         console.log("user replaced")
+            //     }
+            //     else{
                     clients.push(ws.data.client)
                     nameList.push(ws.data.client.name)
                     console.log("user connect")
-                }
+                //}
                 console.log(clients.length)
             }
             
@@ -149,6 +152,25 @@ Bun.serve({
                 }
                 
                 break;
+            case ClientPacketTypes.SEND_CHAT:
+                //TODO censor chat w that one library, push to list, then send out to all clients
+                //msg time should be handled server-side
+                var chatMessage: ChatMessage = msg.data
+                const censor = new TextCensor()
+                const matcher = new RegExpMatcher({
+                    ...englishDataset.build(),
+                    ...englishRecommendedTransformers,
+                })
+                const matches = matcher.getAllMatches(chatMessage.msg)
+                chatMessage = new ChatMessage(chatMessage.name, censor.applyTo(chatMessage.msg, matches))
+                console.log(`<${chatMessage.time[0]}:${chatMessage.time[1]}> ${chatMessage.name}: ${chatMessage.msg}`)
+                chatHistory.push(chatMessage)
+                for (let client of clients){
+                    //if (client.ws.remoteAddress != ws.remoteAddress){
+                        client.ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.INCOMING_CHAT_MESSAGE, chatMessage)))
+                    //}
+                }
+                break
             }
         }
 

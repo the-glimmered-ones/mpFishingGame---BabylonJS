@@ -1,4 +1,4 @@
-import { GlobalClientLocation, ShipTypes } from "@shared/Consts";
+import { ChatMessage, GlobalClientLocation, ShipTypes } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 //import { createNewBoat, setPlayerHasJoined } from "@src/shared";
 //import * as Game from "https://the-glimmered-ones.github.io/multiplayer-boat-game/game.ts";
@@ -148,6 +148,9 @@ ws.addEventListener("message", (event) => {
                         gameModule.addOtherBoat.call(gameFrameWindow, player)
                 }
             }
+            break
+        case ServerPacketTypes.INCOMING_CHAT_MESSAGE:
+            gameModule.displayInboundChat(<ChatMessage>msg.data)
             break
         default:
             console.log("fail")

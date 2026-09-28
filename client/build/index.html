@@ -88,21 +88,17 @@
             <!--<canvas class="gameSize" id="gameArea"></canvas>-->
             <iframe class="gameSize" id="gameFrame" title="Ship Game"></iframe><!--src="water.html" src="game.html"-->
         </div>
-    <script type="module">var __defProp = Object.defineProperty;
-var __returnValue = (v) => v;
-function __exportSetter(name, newValue) {
-  this[name] = __returnValue.bind(null, newValue);
-}
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, {
-      get: all[name],
-      enumerable: true,
-      configurable: true,
-      set: __exportSetter.bind(all, name)
-    });
+    <script type="module">var __esm = (fn, res, err) => () => {
+  if (fn)
+    try {
+      res = fn(fn = 0);
+    } catch (e) {
+      err = [e];
+    }
+  if (err)
+    throw err[0];
+  return res;
 };
-var __esm = (fn, res) => () => (fn && (res = fn(fn = 0)), res);
 
 // shared/Consts.ts
 class PlayerLocation {
@@ -119,6 +115,7 @@ class PlayerLocation {
 class ChatMessage {
   name = "";
   msg = "";
+  time = [new Date().getHours(), new Date().getMinutes()];
   constructor(name, msg) {
     this.name = name;
     this.msg = msg;
@@ -138,13 +135,6 @@ class ClientPacket {
 var init_PacketTypes = () => {};
 
 // client/src/game.ts
-var exports_game = {};
-__export(exports_game, {
-  setJoinedWithName: () => setJoinedWithName,
-  linkWsToGame: () => linkWsToGame,
-  gameLoaded: () => gameLoaded,
-  addOtherBoat: () => addOtherBoat
-});
 function linkWsToGame(frame, webSocket) {
   ws.close();
   ws = webSocket;
@@ -160,8 +150,8 @@ function setJoinedWithName(joinName) {
   name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine2, canvas2) {
-  var scene = new BABYLON.Scene(engine2);
+function createWaterScene(engine, canvas) {
+  var scene = new BABYLON.Scene(engine);
   console.log("scene created");
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
@@ -271,19 +261,43 @@ function setupUI() {
   body.appendChild(ui_chat_table);
   const sendChatButton = iframe.document.getElementById("send-chat");
   const chatBox = iframe.document.getElementById("chat-box");
-  const chatDisplay = iframe.document.createElement("div");
-  chatDisplay.innerHTML = `
-  <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: relative; top: 0px; right: 0px;">04:19PM</span>
-  <br>hello my name is ${name}.
-  `;
+  chatDisplay = iframe.document.createElement("div");
+  chatDisplay.id = "chat-display";
   chatDisplay.style.backgroundColor = "antiqueWhite";
   chatDisplay.style.border = "1px solid black";
   chatDisplay.style.width = chatBox.style.width;
   chatDisplay.style.position = "absolute";
+  const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0, 1));
+  const chatLeft = chatBox.getBoundingClientRect().x;
+  console.log("chat height " + chatHeight.toString() + "px " + Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh");
+  chatDisplay.style.bottom = Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh";
+  chatDisplay.style.left = Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth + "vw";
+  chatDisplay.style.display = "flex";
+  chatDisplay.style.flexDirection = "column";
+  chatDisplay.style.maxHeight = "30vh";
+  chatDisplay.style.overflowY = "scroll";
+  chatDisplay.style.overflowWrap = "anywhere";
+  chatDisplay.style.visibility = "hidden";
   body.appendChild(chatDisplay);
+  chatBox.addEventListener("mouseenter", () => {
+    chatDisplay.scroll(0, chatDisplay.scrollHeight);
+    chatDisplay.style.visibility = "visible";
+  }, { capture: true });
+  chatDisplay.addEventListener("mouseover", () => {
+    chatDisplay.style.visibility = "visible";
+  }, { capture: true });
+  ui_chat_table.addEventListener("mouseleave", () => {
+    chatDisplay.style.visibility = "hidden";
+  });
+  chatDisplay.addEventListener("mouseout", () => {
+    if (document.activeElement != chatBox || document.activeElement != ui_chat_table) {
+      chatDisplay.style.visibility = "hidden";
+    }
+  }, { capture: true });
   sendChatButton.addEventListener("click", () => {
     sendChat(chatBox.value);
     chatBox.value = "";
+    chatBox.focus();
   });
   chatBox.addEventListener("keyup", (event) => {
     if (event.key == "Enter") {
@@ -296,8 +310,25 @@ function sendChat(msg) {
   if (msg == "") {
     return;
   }
-  chatHistory.push(new ChatMessage(name, msg));
-  console.log(msg);
+  const message = new ChatMessage(name, msg);
+  chatHistory.push(message);
+  var hours = new Date().getHours().toString().length == 1 ? "0" + new Date().getHours().toString() : new Date().getHours().toString();
+  var minutes = new Date().getMinutes().toString().length == 1 ? "0" + new Date().getMinutes().toString() : new Date().getMinutes().toString();
+  chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
+  <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${hours}:${minutes}</span>
+  <br>${msg}
+  </p>`;
+  chatDisplay.scroll(0, chatDisplay.scrollHeight);
+  ws.send(JSON.stringify(new ClientPacket(3 /* SEND_CHAT */, message)));
+}
+function displayInboundChat(message) {
+  if (message.name != name) {
+    chatHistory.push(message);
+    chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
+    <span id="name" style="font-weight: bold; text-decoration: underline;">${message.name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${message.time[0]}:${message.time[1]}</span>
+    <br>${message.msg}
+    </p>`;
+  }
 }
 function toggleMap(hideElem, showElem) {
   hideElem.style.visibility = "hidden";
@@ -312,7 +343,7 @@ async function loadBoatMesh(scene) {
     }
   }
 }
-function addBoat(mesh, pos, scale, rotation, camera2) {
+function addBoat(mesh, pos, scale, rotation, camera) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
   var boatMat;
   boatObj = mesh;
@@ -323,11 +354,11 @@ function addBoat(mesh, pos, scale, rotation, camera2) {
   boatRoot.position = pos;
   boatRoot.scaling = scale;
   boatObj.rotation = rotation;
-  if (camera2) {
-    camera2.position = new BABYLON.Vector3(0, 30, -3);
-    camera2.setTarget(new BABYLON.Vector3(0, -10, -3));
-    camera2.fov = 1.1;
-    camera2.parent = boatRoot;
+  if (camera) {
+    camera.position = new BABYLON.Vector3(0, 30, -3);
+    camera.setTarget(new BABYLON.Vector3(0, -10, -3));
+    camera.fov = 1.1;
+    camera.parent = boatRoot;
   }
   console.log(boatRoot);
 }
@@ -336,7 +367,7 @@ function addOtherBoat(player) {
 }
 async function startGame() {
   ws.addEventListener("open", async () => {
-    canvas = iframe.window.document.body.children[0];
+    canvas = iframe.document.getElementById("renderCanvas");
     engine = new BABYLON.Engine(canvas, true);
     let createScene = createWaterScene;
     if (!createScene)
@@ -478,7 +509,7 @@ async function queueClientAction() {
     updateVisibleChatHistory();
   }
 }
-var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", boatMesh, sceneMeshes, acceleration = 0.2, MAX_VELOCITY = 2, velocity = 0, rotSpeed = 0.087, moveNS = 0, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
+var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, sceneMeshes, acceleration = 0.2, MAX_VELOCITY = 2, velocity = 0, rotSpeed = 0.087, moveNS = 0, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
 var init_game = __esm(() => {
   init_PacketTypes();
   init_Consts();
@@ -495,7 +526,7 @@ init_Consts();
 init_PacketTypes();
 var ws2 = new WebSocket("ws://localhost:2323");
 var gameFrameWindow;
-var gameModule = await Promise.resolve().then(() => (init_game(), exports_game));
+var gameModule = await Promise.resolve().then(() => (init_game(), {}));
 addEventListener("load", async () => {
   const gameFrame = document.getElementById("gameFrame");
   gameFrameWindow = gameFrame.contentWindow;
@@ -521,7 +552,7 @@ addEventListener("load", async () => {
         </body>
     </html>`;
   (async function linkGameToIFrame() {
-    gameModule.linkWsToGame(gameFrameWindow, ws2);
+    linkWsToGame(gameFrameWindow, ws2);
   }).call(gameFrame.contentDocument);
 });
 var nameInput = document.getElementById("nameInput");
@@ -596,8 +627,8 @@ ws2.addEventListener("message", (event) => {
     case 2 /* JOIN_ACCEPTED */:
       console.log("hidden");
       if (gameModule && gameFrameWindow) {
-        if (typeof gameModule.setJoinedWithName === "function") {
-          gameModule.setJoinedWithName.call(gameFrameWindow, name2);
+        if (typeof setJoinedWithName === "function") {
+          setJoinedWithName.call(gameFrameWindow, name2);
           console.log("joined with name");
         }
       }
@@ -608,9 +639,12 @@ ws2.addEventListener("message", (event) => {
       if (gameModule && gameFrameWindow) {
         for (let player of playerPositions) {
           if (player.name != name2)
-            gameModule.addOtherBoat.call(gameFrameWindow, player);
+            addOtherBoat.call(gameFrameWindow, player);
         }
       }
+      break;
+    case 5 /* INCOMING_CHAT_MESSAGE */:
+      displayInboundChat(msg.data);
       break;
     default:
       console.log("fail");

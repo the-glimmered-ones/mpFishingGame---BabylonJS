@@ -11,7 +11,8 @@
     "babylonjs-loaders": "^9.21.2",
     "babylonjs-materials": "^9.26.2",
     "babylonjs-post-process": "^9.21.2",
-    "babylonjs-serializers": "^9.22.1"
+    "babylonjs-serializers": "^9.22.1",
+    "obscenity": "^0.4.6"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",

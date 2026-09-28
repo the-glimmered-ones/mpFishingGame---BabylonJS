@@ -123,6 +123,7 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 return scene;
 }
 
+var chatDisplay: HTMLDivElement 
 function setupUI(){
   const body = iframe.document.body
   const ui_minimap = iframe.document.createElement("button")
@@ -197,20 +198,49 @@ function setupUI(){
 
   const sendChatButton: HTMLButtonElement = <HTMLButtonElement>iframe.document.getElementById("send-chat")
   const chatBox: HTMLInputElement = <HTMLInputElement>iframe.document.getElementById("chat-box")
-  const chatDisplay: HTMLDivElement = iframe.document.createElement("div")
-  chatDisplay.innerHTML = `
-  <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: relative; top: 0px; right: 0px;">04:19PM</span>
-  <br>hello my name is ${name}.
-  `
+  chatDisplay = iframe.document.createElement("div")
+  chatDisplay.id = "chat-display"
+  // chatDisplay.innerHTML = `<p style="margin:1px">
+  // <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${new Date().getHours()}:${new Date().getMinutes()}</span>
+  // <br>hello my name is ${name}.
+  // </p>`
   chatDisplay.style.backgroundColor = "antiqueWhite"
   chatDisplay.style.border = "1px solid black"
   chatDisplay.style.width = chatBox.style.width
-  chatDisplay.style.position = "relative" //TODO
-  // chatDisplay.style.bottom = Math.round(chatBox.getBoundingClientRect().top).toString()
-  // chatDisplay.style.x = chatBox.getBoundingClientRect().x.toString()
+  chatDisplay.style.position = "absolute"
+  const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))//in px
+  const chatLeft = (chatBox.getBoundingClientRect().x)
+  console.log("chat height " + chatHeight.toString() + "px " + (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh")
+  chatDisplay.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
+  chatDisplay.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  chatDisplay.style.display = "flex"
+  chatDisplay.style.flexDirection = "column"
+  chatDisplay.style.maxHeight = "30vh"
+  chatDisplay.style.overflowY = "scroll"
+  chatDisplay.style.overflowWrap = "anywhere"
+  chatDisplay.style.visibility = "hidden"
   body.appendChild(chatDisplay)
 
-  sendChatButton.addEventListener("click", () => { sendChat(chatBox.value); chatBox.value = ""; })
+  chatBox.addEventListener("mouseenter", () => {
+    chatDisplay.scroll(0, chatDisplay.scrollHeight)
+    chatDisplay.style.visibility = "visible"
+  }, {"capture": true})
+
+  chatDisplay.addEventListener("mouseover", () => {
+    chatDisplay.style.visibility = "visible"
+  }, {"capture": true})
+
+  ui_chat_table.addEventListener("mouseleave", () => {
+    chatDisplay.style.visibility = "hidden"
+  })
+
+  chatDisplay.addEventListener("mouseout", () => {
+    if (document.activeElement != chatBox || document.activeElement != ui_chat_table){
+      chatDisplay.style.visibility = "hidden"
+    }
+  }, {"capture": true})
+
+  sendChatButton.addEventListener("click", () => { sendChat(chatBox.value); chatBox.value = ""; chatBox.focus(); })
   chatBox.addEventListener("keyup", (event) => {
     if (event.key == "Enter"){
       sendChat(chatBox.value); 
@@ -221,8 +251,26 @@ function setupUI(){
 
 function sendChat(msg: string){
   if (msg == "") { return; }
-  chatHistory.push(new ChatMessage(name, msg))
-  console.log(msg)
+  const message = new ChatMessage(name, msg)
+  chatHistory.push(message)
+  var hours = (new Date().getHours().toString().length == 1) ? ("0" + new Date().getHours().toString()) : (new Date().getHours().toString())
+  var minutes = (new Date().getMinutes().toString().length == 1) ? ("0" + new Date().getMinutes().toString()) : (new Date().getMinutes().toString())
+  chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
+  <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${hours}:${minutes}</span>
+  <br>${msg}
+  </p>`
+  chatDisplay.scroll(0, chatDisplay.scrollHeight)
+  ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.SEND_CHAT, message)))
+}
+
+export function displayInboundChat(message: ChatMessage){
+  if (message.name != name){
+    chatHistory.push(message)
+    chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
+    <span id="name" style="font-weight: bold; text-decoration: underline;">${message.name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${message.time[0]}:${message.time[1]}</span>
+    <br>${message.msg}
+    </p>`
+  }
 }
 
 function toggleMap(hideElem: HTMLElement, showElem: HTMLElement){
@@ -280,7 +328,7 @@ export function addOtherBoat(player: GlobalClientLocation){
 async function startGame(){//parent.getWebsocket()){
   ws.addEventListener("open", async () => {
     //if (engine == null) {
-    canvas = <HTMLCanvasElement>(iframe.window.document.body.children[0])
+    canvas = <HTMLCanvasElement>(iframe.document.getElementById("renderCanvas"))//iframe.window.document.body.children[0])
     engine = new BABYLON.Engine(canvas, true); //,{ preserveDrawingBuffer: true, stencil: true });
     //}
 

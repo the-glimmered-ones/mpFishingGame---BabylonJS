@@ -19,7 +19,8 @@ export class ClientPacket {
 export const enum ClientPacketTypes{
     NONE,
     JOIN_WITH_NAME,
-    PLAYER_POSITION_UPDATE
+    PLAYER_POSITION_UPDATE,
+    SEND_CHAT
 }
 
 export const enum ServerPacketTypes{
@@ -27,5 +28,6 @@ export const enum ServerPacketTypes{
     DUPLICATE_NAME_DETECTED,
     JOIN_ACCEPTED,
     INVALID_NAME_DETECTED,
-    UPDATE_GLOBAL_PLAYER_POSITIONS
+    UPDATE_GLOBAL_PLAYER_POSITIONS,
+    INCOMING_CHAT_MESSAGE
 }
