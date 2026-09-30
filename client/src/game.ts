@@ -174,7 +174,7 @@ function setupUI(){
   ui_map.tabIndex, ui_exit_map.tabIndex, exit_map_img.tabIndex = -1
 
   ui_minimap.addEventListener("click", () => { toggleMap(ui_minimap, ui_map) })
-  ui_exit_map.addEventListener("click", () => { toggleMap(ui_map, ui_minimap) })
+  ui_exit_map.addEventListener("click", () => { toggleMap(ui_map, ui_minimap); canvas.focus() })
 
   const ui_chat_table = iframe.document.createElement("table")
   ui_chat_table.innerHTML = `
@@ -438,13 +438,13 @@ function accelerate(reversing: boolean){
 
 function decelerate(reversing: boolean){
   if (reversing){
-    if (velocity < (-1 * acceleration))
+    if (velocity < 0)
       velocity += acceleration;
     if (velocity > 0)
       velocity = 0;
   }
   else{
-    if (velocity > acceleration)
+    if (velocity > 0)
       velocity -= acceleration;
     if (velocity < 0)
       velocity = 0;

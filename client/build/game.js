@@ -148,6 +148,7 @@ function setupUI() {
   });
   ui_exit_map.addEventListener("click", () => {
     toggleMap(ui_map, ui_minimap);
+    canvas.focus();
   });
   const ui_chat_table = iframe.document.createElement("table");
   ui_chat_table.innerHTML = `
@@ -353,12 +354,12 @@ function accelerate(reversing) {
 }
 function decelerate(reversing) {
   if (reversing) {
-    if (velocity < -1 * acceleration)
+    if (velocity < 0)
       velocity += acceleration;
     if (velocity > 0)
       velocity = 0;
   } else {
-    if (velocity > acceleration)
+    if (velocity > 0)
       velocity -= acceleration;
     if (velocity < 0)
       velocity = 0;
