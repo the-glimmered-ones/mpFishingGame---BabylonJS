@@ -48,7 +48,7 @@ export function setJoinedWithName(joinName: string){
 
 function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var scene: BABYLON.Scene = new BABYLON.Scene(engine);
-    console.log("scene created")
+    //console.log("scene created")
     //var camera = new BABYLON.ArcRotateCamera("Camera", 3 * Math.PI / 2, 8 * Math.PI / 45, 100, BABYLON.Vector3.Zero(), scene);
     camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0,0,0), scene);
     //camera.attachControl(canvas, true);
@@ -210,7 +210,7 @@ function setupUI(){
   chatDisplay.style.position = "absolute"
   const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))//in px
   const chatLeft = (chatBox.getBoundingClientRect().x)
-  console.log("chat height " + chatHeight.toString() + "px " + (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh")
+  //console.log("chat height " + chatHeight.toString() + "px " + (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh")
   chatDisplay.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
   chatDisplay.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
   chatDisplay.style.display = "flex"
@@ -316,7 +316,7 @@ function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector
     //camera.maxCameraSpeed = 10;
   }
 
-  console.log(boatRoot) 
+  //console.log(boatRoot) 
 }
 
 export function addOtherBoat(player: GlobalClientLocation){
@@ -336,7 +336,7 @@ async function startGame(){//parent.getWebsocket()){
     // if (!createScene && mod.Playground?.CreateScene) createScene = (e,c)=>mod.Playground.CreateScene(e,c);
     if (!createScene) throw new Error('No createScene() export found.');
 
-    console.log("made here")
+    //console.log("made here")
     //console.log(iframe.window.document.body.children)
     const scene = await createWaterScene(engine, canvas);
     gameLoaded = true;
@@ -358,7 +358,7 @@ async function startGame(){//parent.getWebsocket()){
 //const MAX_ACCELERATION = 1;
 const acceleration = .2;
 const MAX_VELOCITY = 2;
-let velocity: number  = 0;
+let velocity: number = 1;
 const rotSpeed: number = 0.087; //5 deg
 let moveNS: number = 0
 function moveBoat(){
@@ -367,7 +367,7 @@ function moveBoat(){
   if (actionParams.length == 0) { return; }
   console.log("move boat")
 
-  moveNS = 0
+  moveNS = .5
   const inputWE = actionParams[0]
   const inputNS = actionParams[1]
   //console.log(actionParams)
@@ -375,7 +375,7 @@ function moveBoat(){
   //TODO: acceleration / lerp with delta for smoother movement
 
   if (inputNS != "" || inputWE != ""){
-    console.log("hasJoinedWithName " + joinedWithName)
+    //console.log("hasJoinedWithName " + joinedWithName)
     ws.send(
       JSON.stringify(
         new ClientPacket(ClientPacketTypes.PLAYER_POSITION_UPDATE, 
@@ -392,15 +392,15 @@ function moveBoat(){
 
     if (inputNS == "N"){
       if (velocity > 0)
-        velocity = 0
+        velocity = -.2
       accelerate(false);
-      moveNS = velocity//-1 * (velocity + acceleration)
+      moveNS = (-1 * moveNS) + velocity//-1 * (velocity + acceleration)
     }
     else if (inputNS == "S"){
       if (velocity < 0)
-        velocity = 0
+        velocity = .2
       accelerate(true);
-      moveNS = velocity// + acceleration
+      moveNS = moveNS + velocity// + acceleration
     }
     //console.log("pos " + boatObj.position)
     boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0))//new BABYLON.Vector3(moveNS, 0, 0))
@@ -438,13 +438,13 @@ function accelerate(reversing: boolean){
 
 function decelerate(reversing: boolean){
   if (reversing){
-    if (velocity < 0)
+    if (velocity < (-1 * acceleration))
       velocity += acceleration;
     if (velocity > 0)
       velocity = 0;
   }
   else{
-    if (velocity > 0)
+    if (velocity > acceleration)
       velocity -= acceleration;
     if (velocity < 0)
       velocity = 0;
@@ -454,13 +454,13 @@ function decelerate(reversing: boolean){
 
 const pressedMoveKeys: Array<string> = []
 function addKeyListeners(){
-  console.log("added listeners")
+  //console.log("added listeners")
   canvas.addEventListener("keydown", (event) => {
   //w/up = go forward, left/right = turn, down = slowly back up
   //change view = space, attack = shift, map = tab
     const key = event.key
     //console.log(key)
-    console.log(gameLoaded, joinedWithName)
+    //console.log(gameLoaded, joinedWithName)
     if (gameLoaded && joinedWithName){
       actionParams = [];
       pressedMoveKeys.splice(0)

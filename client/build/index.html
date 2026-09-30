@@ -66,24 +66,22 @@
         <h1 style="margin-top:5px; margin-bottom:15px;">Boat Game</h1>
         <div style="display: block;" id="contentArea">
             <div class="chooseShipOverlay gameSize" id="chooseShipOverlay">
-            <table style="height: fit-content; width: fit-content; align-self: center; background-color: antiquewhite; box-shadow: 5px 3px 2px; visibility: inherit; padding: 10px">
-                <tr style="visibility: inherit;">
-                    <td><button class="newBtnStyle selectShipBtns" id="selectSailboat" style="visibility: inherit;">Sailboat</button></td>
-                    <td><button class="newBtnStyle selectShipBtns" id="selectTrawler" style="visibility: inherit;">Trawler</button></td>
-                    <td><button class="newBtnStyle selectShipBtns" id="selectSubmarine" style="visibility: inherit;">Submarine</button></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td><div style="padding: 5px 10px; width: 200px; text-align: left; margin:10px 0px">
-                        <label for="nameInput">Name:</label>
-                        <input type="text" id="nameInput" name="nameInput">
-                    </div></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td><button class="newBtnStyle" id="submitNameBtn"><b>Submit</b></button></td>
-                </tr>
-            </table>
+            <div style="height: fit-content; width: fit-content; align-self: center; background-color: antiquewhite; box-shadow: 5px 3px 2px; visibility: inherit; padding: 10px; display: flex; align-items: center;">
+                <div style="padding: 5px 10px; width: 200px; text-align: left; margin:0px 0px 10px 0px">
+                    <label for="nameInput">Name:</label>
+                    <input type="text" id="nameInput" name="nameInput">
+                </div>
+                <fieldset style="width:max-content; height: max-content;">
+                    <legend>Select a class</legend>
+                    <input type="radio" name="selectClass" id="selectSailboat" style="visibility: inherit;" value="selectSailboat"></button>
+                    <label for="selectSailboat">Sailboat</label>
+                    <input type="radio" name="selectClass" id="selectTrawler" style="visibility: inherit;" value="selectTrawler"></button>
+                    <label for="selectTrawler">Trawler</label>
+                    <input type="radio" name="selectClass" id="selectSubmarine" style="visibility: inherit;" value="selectSubmarine"></button>
+                    <label for="selectSubmarine">Submarine</label>
+                </fieldset>
+                <button class="newBtnStyle" id="submitNameBtn" style="margin: 10px 0px;"><b>Submit</b></button>
+            </div>
         </div>
             <!--<canvas class="gameSize" id="gameArea"></canvas>-->
             <iframe class="gameSize" id="gameFrame" title="Ship Game"></iframe><!--src="water.html" src="game.html"-->
@@ -152,7 +150,6 @@ function setJoinedWithName(joinName) {
 }
 function createWaterScene(engine, canvas) {
   var scene = new BABYLON.Scene(engine);
-  console.log("scene created");
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -269,7 +266,6 @@ function setupUI() {
   chatDisplay.style.position = "absolute";
   const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0, 1));
   const chatLeft = chatBox.getBoundingClientRect().x;
-  console.log("chat height " + chatHeight.toString() + "px " + Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh");
   chatDisplay.style.bottom = Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh";
   chatDisplay.style.left = Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth + "vw";
   chatDisplay.style.display = "flex";
@@ -360,7 +356,6 @@ function addBoat(mesh, pos, scale, rotation, camera) {
     camera.fov = 1.1;
     camera.parent = boatRoot;
   }
-  console.log(boatRoot);
 }
 function addOtherBoat(player) {
   addBoat(boatMesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0));
@@ -372,7 +367,6 @@ async function startGame() {
     let createScene = createWaterScene;
     if (!createScene)
       throw new Error("No createScene() export found.");
-    console.log("made here");
     const scene = await createWaterScene(engine, canvas);
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
@@ -395,24 +389,23 @@ function moveBoat() {
     return;
   }
   console.log("move boat");
-  moveNS = 0;
+  moveNS = 0.5;
   const inputWE = actionParams[0];
   const inputNS = actionParams[1];
   if (inputNS != "" || inputWE != "") {
-    console.log("hasJoinedWithName " + joinedWithName);
     ws.send(JSON.stringify(new ClientPacket(2 /* PLAYER_POSITION_UPDATE */, new PlayerLocation([boatObj.absolutePosition.x, boatObj.absolutePosition.z], boatObj.rotation.y, velocity))));
   }
   if (inputNS != "") {
     if (inputNS == "N") {
       if (velocity > 0)
-        velocity = 0;
+        velocity = -0.2;
       accelerate(false);
-      moveNS = velocity;
+      moveNS = -1 * moveNS + velocity;
     } else if (inputNS == "S") {
       if (velocity < 0)
-        velocity = 0;
+        velocity = 0.2;
       accelerate(true);
-      moveNS = velocity;
+      moveNS = moveNS + velocity;
     }
     boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0));
     camera.position = new BABYLON.Vector3(boatObj.position.x, camera.position.y, boatObj.position.z - 3);
@@ -441,22 +434,20 @@ function accelerate(reversing) {
 }
 function decelerate(reversing) {
   if (reversing) {
-    if (velocity < 0)
+    if (velocity < -1 * acceleration)
       velocity += acceleration;
     if (velocity > 0)
       velocity = 0;
   } else {
-    if (velocity > 0)
+    if (velocity > acceleration)
       velocity -= acceleration;
     if (velocity < 0)
       velocity = 0;
   }
 }
 function addKeyListeners() {
-  console.log("added listeners");
   canvas.addEventListener("keydown", (event) => {
     const key = event.key;
-    console.log(gameLoaded, joinedWithName);
     if (gameLoaded && joinedWithName) {
       actionParams = [];
       pressedMoveKeys.splice(0);
@@ -509,7 +500,7 @@ async function queueClientAction() {
     updateVisibleChatHistory();
   }
 }
-var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, sceneMeshes, acceleration = 0.2, MAX_VELOCITY = 2, velocity = 0, rotSpeed = 0.087, moveNS = 0, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
+var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, sceneMeshes, acceleration = 0.2, MAX_VELOCITY = 2, velocity = 1, rotSpeed = 0.087, moveNS = 0, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
 var init_game = __esm(() => {
   init_PacketTypes();
   init_Consts();
@@ -556,50 +547,31 @@ addEventListener("load", async () => {
   }).call(gameFrame.contentDocument);
 });
 var nameInput = document.getElementById("nameInput");
-var selectSailboat = document.getElementById("selectSailboat");
-var selectTrawler = document.getElementById("selectTrawler");
-var selectSubmarine = document.getElementById("selectSubmarine");
 var ship = 0 /* NONE */;
-var shipSelectBtns = document.getElementsByClassName("selectShipBtns");
+var shipSelectBtns = document.getElementsByName("selectClass");
 var selectedShipBtn;
 for (let btn of shipSelectBtns) {
-  btn.addEventListener("click", (event) => {
+  btn.addEventListener("change", (event) => {
     selectedShipBtn = btn;
-    selectSailboat.style.backgroundColor = selectTrawler.style.backgroundColor = selectSubmarine.style.backgroundColor = "antiquewhite";
-    switch (btn.id) {
+    console.log(btn.value);
+    switch (btn.value) {
       case "selectSailboat":
-        if (ship == 1 /* SAILBOAT */) {
-          selectSailboat.style.backgroundColor = "antiquewhite";
-          ship = 0 /* NONE */;
-          return;
-        }
         ship = 1 /* SAILBOAT */;
-        selectSailboat.style.backgroundColor = "rgb(222, 184, 135)";
         break;
       case "selectTrawler":
-        if (ship == 2 /* TRAWLER */) {
-          selectTrawler.style.backgroundColor = "antiquewhite";
-          ship = 0 /* NONE */;
-          return;
-        }
         ship = 2 /* TRAWLER */;
-        selectTrawler.style.backgroundColor = "rgb(222, 184, 135)";
         break;
       case "selectSubmarine":
-        if (ship == 3 /* SUBMARINE */) {
-          selectSubmarine.style.backgroundColor = "antiquewhite";
-          ship = 0 /* NONE */;
-          return;
-        }
         ship = 3 /* SUBMARINE */;
-        selectSubmarine.style.backgroundColor = "rgb(222, 184, 135)";
         break;
       default:
         return;
     }
   });
   btn.addEventListener("mouseenter", (event) => {
-    btn.style.backgroundColor = "rgb(222, 184, 135)";
+    if (btn != selectedShipBtn) {
+      btn.style.backgroundColor = "rgb(222, 184, 135)";
+    }
   });
   btn.addEventListener("mouseleave", (event) => {
     if (btn != selectedShipBtn) {
@@ -610,12 +582,19 @@ for (let btn of shipSelectBtns) {
 var name2;
 var submitNameBtn = document.getElementById("submitNameBtn");
 submitNameBtn.addEventListener("click", () => {
+  joinGame();
+});
+nameInput.addEventListener("keyup", (event) => {
+  if (event.key == "Enter") {
+    joinGame();
+  }
+});
+function joinGame() {
   name2 = nameInput.value;
   if (name2 != "" && ship) {
     ws2.send(JSON.stringify(new ClientPacket(1 /* JOIN_WITH_NAME */, name2)));
-    console.log("join request sent");
   }
-});
+}
 var chooseShipOverlay = document.getElementById("chooseShipOverlay");
 ws2.addEventListener("message", (event) => {
   let msg = JSON.parse(event.data);
@@ -625,16 +604,15 @@ ws2.addEventListener("message", (event) => {
     case 3 /* INVALID_NAME_DETECTED */:
       break;
     case 2 /* JOIN_ACCEPTED */:
-      console.log("hidden");
       if (gameModule && gameFrameWindow) {
         if (typeof setJoinedWithName === "function") {
           setJoinedWithName.call(gameFrameWindow, name2);
-          console.log("joined with name");
         }
       }
       chooseShipOverlay.style.visibility = "hidden";
       break;
     case 4 /* UPDATE_GLOBAL_PLAYER_POSITIONS */:
+      console.log("add boat");
       const playerPositions = msg.data;
       if (gameModule && gameFrameWindow) {
         for (let player of playerPositions) {

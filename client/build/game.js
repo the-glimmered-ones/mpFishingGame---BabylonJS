@@ -61,7 +61,6 @@ function setJoinedWithName(joinName) {
 }
 function createWaterScene(engine, canvas) {
   var scene = new BABYLON.Scene(engine);
-  console.log("scene created");
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -179,7 +178,6 @@ function setupUI() {
   chatDisplay.style.position = "absolute";
   const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0, 1));
   const chatLeft = chatBox.getBoundingClientRect().x;
-  console.log("chat height " + chatHeight.toString() + "px " + Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh");
   chatDisplay.style.bottom = Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh";
   chatDisplay.style.left = Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth + "vw";
   chatDisplay.style.display = "flex";
@@ -272,7 +270,6 @@ function addBoat(mesh, pos, scale, rotation, camera) {
     camera.fov = 1.1;
     camera.parent = boatRoot;
   }
-  console.log(boatRoot);
 }
 function addOtherBoat(player) {
   addBoat(boatMesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0));
@@ -284,7 +281,6 @@ async function startGame() {
     let createScene = createWaterScene;
     if (!createScene)
       throw new Error("No createScene() export found.");
-    console.log("made here");
     const scene = await createWaterScene(engine, canvas);
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
@@ -301,7 +297,7 @@ async function startGame() {
 }
 var acceleration = 0.2;
 var MAX_VELOCITY = 2;
-var velocity = 0;
+var velocity = 1;
 var rotSpeed = 0.087;
 var moveNS = 0;
 function moveBoat() {
@@ -312,24 +308,23 @@ function moveBoat() {
     return;
   }
   console.log("move boat");
-  moveNS = 0;
+  moveNS = 0.5;
   const inputWE = actionParams[0];
   const inputNS = actionParams[1];
   if (inputNS != "" || inputWE != "") {
-    console.log("hasJoinedWithName " + joinedWithName);
     ws.send(JSON.stringify(new ClientPacket(2 /* PLAYER_POSITION_UPDATE */, new PlayerLocation([boatObj.absolutePosition.x, boatObj.absolutePosition.z], boatObj.rotation.y, velocity))));
   }
   if (inputNS != "") {
     if (inputNS == "N") {
       if (velocity > 0)
-        velocity = 0;
+        velocity = -0.2;
       accelerate(false);
-      moveNS = velocity;
+      moveNS = -1 * moveNS + velocity;
     } else if (inputNS == "S") {
       if (velocity < 0)
-        velocity = 0;
+        velocity = 0.2;
       accelerate(true);
-      moveNS = velocity;
+      moveNS = moveNS + velocity;
     }
     boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0));
     camera.position = new BABYLON.Vector3(boatObj.position.x, camera.position.y, boatObj.position.z - 3);
@@ -358,12 +353,12 @@ function accelerate(reversing) {
 }
 function decelerate(reversing) {
   if (reversing) {
-    if (velocity < 0)
+    if (velocity < -1 * acceleration)
       velocity += acceleration;
     if (velocity > 0)
       velocity = 0;
   } else {
-    if (velocity > 0)
+    if (velocity > acceleration)
       velocity -= acceleration;
     if (velocity < 0)
       velocity = 0;
@@ -371,10 +366,8 @@ function decelerate(reversing) {
 }
 var pressedMoveKeys = [];
 function addKeyListeners() {
-  console.log("added listeners");
   canvas.addEventListener("keydown", (event) => {
     const key = event.key;
-    console.log(gameLoaded, joinedWithName);
     if (gameLoaded && joinedWithName) {
       actionParams = [];
       pressedMoveKeys.splice(0);
