@@ -98,20 +98,27 @@ nameInput.addEventListener("keyup", (event) => {
 function joinGame(){
     name = nameInput.value
     //console.log(name + " " + ship)
-    if(name != "" && ship){
+    if(ship){
         ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.JOIN_WITH_NAME, name)))
         //console.log("join request sent")
     }
 }
 
 const chooseShipOverlay: HTMLDivElement = <HTMLDivElement>document.getElementById("chooseShipOverlay")
+const nameWarning = <HTMLSpanElement>document.getElementById("nameWarning")
 ws.addEventListener("message", (event) => {
     let msg: ServerPacket = JSON.parse(event.data)
     //console.log(typeof msg)
     switch (msg.packetType){
         case ServerPacketTypes.DUPLICATE_NAME_DETECTED:
+            nameWarning.style.visibility = "visible"
+            nameWarning.style.display = "block"
+            nameWarning.textContent = "This name is already taken"
             break
         case ServerPacketTypes.INVALID_NAME_DETECTED://TODO show some kind of error message by the name box
+            nameWarning.style.visibility = "visible"
+            nameWarning.style.display = "block"
+            nameWarning.textContent = "Please use a valid name"
             break
         case ServerPacketTypes.JOIN_ACCEPTED:
             //console.log("hidden")
@@ -123,6 +130,8 @@ ws.addEventListener("message", (event) => {
                 }
                 
             }
+            nameWarning.style.visibility = "hidden"
+            nameWarning.style.display = "none"
             chooseShipOverlay.style.visibility = "hidden"
             break
         case ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS:

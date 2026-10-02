@@ -50,15 +50,15 @@
             .selectShipBtns{
                 visibility:visible;
             }
-            .newBtnStyle{
-                border: 3px inset peachpuff;
-                background-color: antiquewhite;
+            #submitNameBtn{
+                border: 2px solid #97551b;
+                background-color: #f5e9e1;
                 box-shadow: 4px 3px 2px;
                 width: 110px;
                 height: 40px;
             }
-            .newBtnStyle:hover{
-                background-color: rgb(222, 184, 135);
+            #submitNameBtn:hover{
+                background-color: #e2d1c5;
             }
         </style>
     </head>
@@ -66,21 +66,24 @@
         <h1 style="margin-top:5px; margin-bottom:15px;">Boat Game</h1>
         <div style="display: block;" id="contentArea">
             <div class="chooseShipOverlay gameSize" id="chooseShipOverlay">
-            <div style="height: fit-content; width: fit-content; align-self: center; background-color: antiquewhite; box-shadow: 5px 3px 2px; visibility: inherit; padding: 10px; display: flex; align-items: center;">
-                <div style="padding: 5px 10px; width: 200px; text-align: left; margin:0px 0px 10px 0px">
-                    <label for="nameInput">Name:</label>
-                    <input type="text" id="nameInput" name="nameInput">
+            <div style="height: fit-content;width: fit-content;align-self: center;background-color: antiquewhite;box-shadow: 5px 3px 2px;visibility: inherit;padding: 10px;display: flex;align-items: center;border: 3px solid brown;flex-direction: row;">
+                <div>
+                    <fieldset style="width:stretch; height: max-content; margin: 0px 0px 10px 0px;">
+                        <legend>Select a class</legend>
+                        <input type="radio" name="selectClass" id="selectSailboat" style="visibility: inherit;" value="selectSailboat"></button>
+                        <label for="selectSailboat">Sailboat</label>
+                        <input type="radio" name="selectClass" id="selectTrawler" style="visibility: inherit;" value="selectTrawler"></button>
+                        <label for="selectTrawler">Trawler</label>
+                        <input type="radio" name="selectClass" id="selectSubmarine" style="visibility: inherit;" value="selectSubmarine"></button>
+                        <label for="selectSubmarine">Submarine</label>
+                    </fieldset>
+                    <fieldset style="width: stretch;height:max-content">
+                        <legend style="text-align: left;">Name</legend>
+                        <input type="text" id="nameInput" name="nameInput" style="width: stretch;">
+                        <span id="nameWarning" style="color:red; visibility: hidden; display: none;">This name is already taken</span>
+                    </fieldset>
                 </div>
-                <fieldset style="width:max-content; height: max-content;">
-                    <legend>Select a class</legend>
-                    <input type="radio" name="selectClass" id="selectSailboat" style="visibility: inherit;" value="selectSailboat"></button>
-                    <label for="selectSailboat">Sailboat</label>
-                    <input type="radio" name="selectClass" id="selectTrawler" style="visibility: inherit;" value="selectTrawler"></button>
-                    <label for="selectTrawler">Trawler</label>
-                    <input type="radio" name="selectClass" id="selectSubmarine" style="visibility: inherit;" value="selectSubmarine"></button>
-                    <label for="selectSubmarine">Submarine</label>
-                </fieldset>
-                <button class="newBtnStyle" id="submitNameBtn" style="margin: 10px 0px;"><b>Submit</b></button>
+                <button id="submitNameBtn" style="margin: 0px 10px;height:50%; font-weight: bold;">Submit</button>
             </div>
         </div>
             <!--<canvas class="gameSize" id="gameArea"></canvas>-->
@@ -332,9 +335,10 @@ function toggleMap(hideElem, showElem) {
   showElem.style.visibility = "visible";
 }
 async function loadBoatMesh(scene) {
-  sceneMeshes = await BABYLON.ImportMeshAsync("textures/boat-placeholder.obj", scene);
+  sceneMeshes = await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene);
+  console.log(sceneMeshes.meshes);
   for (let mesh of sceneMeshes.meshes) {
-    if (mesh.name == "BOAT") {
+    if (mesh.name.includes("hull")) {
       boatMesh = mesh;
       addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, camera);
     }
@@ -376,6 +380,7 @@ async function startGame() {
         engine.resize();
       }
     });
+    scene.debugLayer.show();
     joinedWithName = false;
     console.log("scene drawn");
     addKeyListeners();
@@ -592,17 +597,24 @@ nameInput.addEventListener("keyup", (event) => {
 });
 function joinGame() {
   name2 = nameInput.value;
-  if (name2 != "" && ship) {
+  if (ship) {
     ws2.send(JSON.stringify(new ClientPacket(1 /* JOIN_WITH_NAME */, name2)));
   }
 }
 var chooseShipOverlay = document.getElementById("chooseShipOverlay");
+var nameWarning = document.getElementById("nameWarning");
 ws2.addEventListener("message", (event) => {
   let msg = JSON.parse(event.data);
   switch (msg.packetType) {
     case 1 /* DUPLICATE_NAME_DETECTED */:
+      nameWarning.style.visibility = "visible";
+      nameWarning.style.display = "block";
+      nameWarning.textContent = "This name is already taken";
       break;
     case 3 /* INVALID_NAME_DETECTED */:
+      nameWarning.style.visibility = "visible";
+      nameWarning.style.display = "block";
+      nameWarning.textContent = "Please use a valid name";
       break;
     case 2 /* JOIN_ACCEPTED */:
       if (gameModule && gameFrameWindow) {
@@ -610,6 +622,8 @@ ws2.addEventListener("message", (event) => {
           setJoinedWithName.call(gameFrameWindow, name2);
         }
       }
+      nameWarning.style.visibility = "hidden";
+      nameWarning.style.display = "none";
       chooseShipOverlay.style.visibility = "hidden";
       break;
     case 4 /* UPDATE_GLOBAL_PLAYER_POSITIONS */:

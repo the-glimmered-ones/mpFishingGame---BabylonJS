@@ -281,9 +281,10 @@ function toggleMap(hideElem: HTMLElement, showElem: HTMLElement){
 var boatMesh: BABYLON.Mesh
 var sceneMeshes: BABYLON.ISceneLoaderAsyncResult;
 async function loadBoatMesh(scene: BABYLON.Scene){
-    sceneMeshes = (await BABYLON.ImportMeshAsync("textures/boat-placeholder.obj", scene));
+    sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
+    console.log(sceneMeshes.meshes)
     for (let mesh of sceneMeshes.meshes){
-      if (mesh.name == 'BOAT'){
+      if (mesh.name.includes('hull')){//BOAT
         boatMesh = <BABYLON.Mesh>mesh
         addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, camera);
       }
@@ -342,7 +343,7 @@ async function startGame(){//parent.getWebsocket()){
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
-    //scene.debugLayer.show()
+    scene.debugLayer.show()
     joinedWithName = false
     console.log("scene drawn")
     addKeyListeners()

@@ -1,0 +1,11 @@
+sailboat: 
+https://forum.woodenboat.com/forum/designs-plans/11140-gaff-rig-vs-bermuda
+can change rigging type at port from gaff to bermuda with resource cost
+gaff - looks cool, faster off wind, more control and faster deccel, much more sail
+bermuda - simpler design, can sail closer to windward (source) direction
+wind coming from starboard side, sails on port side = starboard tack; wind from port side = port tack
+changing one tack to the other while bringing the wind direction across the bow is tacking (upwind)
+tacking into the wind at close reach still allows forward progress
+changing tack with the wind to the stern (downwind) is called jibing, haul in sail during turn, so wind catches it on the other side
+sailing at broad reach (downwind at a diagonal) is faster then running (straight downwind), so repeatedly jibing in a zig zag is faster than sailing in a straight line
+quicktime minigame when wind gets strong enough? i dont want to make it too complicated

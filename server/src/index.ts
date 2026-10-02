@@ -100,9 +100,8 @@ Bun.serve({
             }
         },
         message(ws, message: string){
-            //console.log(msg)
-            console.log(JSON.parse(message))
             var msg: ClientPacket = JSON.parse(message)// msg = {packetType, everything else}
+            console.log(msg)
             console.log("msg recieved")
             switch(msg.packetType){
 
@@ -110,30 +109,32 @@ Bun.serve({
                 break;
 
             case ClientPacketTypes.JOIN_WITH_NAME:
+                console.log(nameList)
+                if (msg.data == ""){//TODO also put a character limit here
+                    console.log("invalid name")
+                    ws.send(JSON.stringify(
+                        new ServerPacket(ServerPacketTypes.INVALID_NAME_DETECTED)))
+                    break;
+                }
                 if(nameList.includes(msg.data)){
                     ws.send(JSON.stringify(
                         new ServerPacket(ServerPacketTypes.DUPLICATE_NAME_DETECTED)))
                     console.log("dupe name")
+                    break;
                 }
                 else{
                     //console.log("not a dupe")
-                    for (let client of clients){
+                    for (let i = 0; i < clients.length; i++){
+                        const client = clients[i]
                         if (client.ws.remoteAddress == ws.remoteAddress){
                             //console.log("found id")
-                            if (msg.data != ""){//TODO also put a character limit here
-                                client.name = msg.data
-                                console.log(`accepted ${client.name}`)
-                                
-                                ws.send(JSON.stringify(
-                                    new ServerPacket(ServerPacketTypes.JOIN_ACCEPTED)))
-                                break;
-                            }
-                            else{
-                                console.log("invalid name")
-                                ws.send(JSON.stringify(
-                                    new ServerPacket(ServerPacketTypes.INVALID_NAME_DETECTED)))
-                                break;
-                            }
+                            client.name = msg.data
+                            console.log(`accepted ${client.name}`)
+                            nameList[i] = client.name
+                            
+                            ws.send(JSON.stringify(
+                                new ServerPacket(ServerPacketTypes.JOIN_ACCEPTED)))
+                            break;
                         }
                     }
                     break;
