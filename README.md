@@ -1,15 +1,7 @@
-# Elysia with Bun runtime
-hi
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
-```bash
-bun create elysia ./elysia-example
-```
+# This project is still in the prototyping phase
+I'm doing much of this for the first time, so I'm figuring it out as I go
 
-## Development
-To start the development server run:
-```bash
-bun run dev
-```
+Ignore the deployments tab, I didn't understand Cloudflare was "serverless," so I have to find another way to host it that doesn't make all of my backend code useless
 
-Open http://localhost:3000/ with your browser to see the result.
+## Notes
+This game is rendered using the Babylon.js framework and bundled using Bun
