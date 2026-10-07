@@ -53,9 +53,9 @@ addEventListener("load", async () => {
 
 const nameInput: HTMLInputElement = <HTMLInputElement>document.getElementById("nameInput");
 var ship: ShipTypes = ShipTypes.NONE
-const shipSelectBtns = <NodeListOf<HTMLInputElement>>document.getElementsByName("selectClass")
+const shipSelectRadioBtns = <NodeListOf<HTMLInputElement>>document.getElementsByName("selectClass")
 var selectedShipBtn: HTMLInputElement;
-for (let btn of shipSelectBtns){
+for (let btn of shipSelectRadioBtns){
     btn.addEventListener("change", (event) => {
         selectedShipBtn = <HTMLInputElement>btn
         console.log(btn.value)
@@ -82,6 +82,11 @@ for (let btn of shipSelectBtns){
     btn.addEventListener("mouseleave", (event) => {
         if (btn != selectedShipBtn){
             btn.style.backgroundColor = "antiquewhite"
+        }
+    })
+    btn.addEventListener("keyup", (event) => {
+        if (btn.type == "radio"){
+            nameInput.focus()
         }
     })
 }
