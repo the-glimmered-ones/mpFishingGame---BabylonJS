@@ -7,6 +7,7 @@
 // import "babylonjs-gui";
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
+import { FollowCamera } from "babylonjs";
 //import { ws } from "@src/shared";
 var ws: WebSocket = new WebSocket("");
 var iframe: Window = window.self;
@@ -126,6 +127,7 @@ return scene;
 var chatDisplay: HTMLDivElement 
 function setupUI(){
   const body = iframe.document.body
+  body.style.flexDirection = "row"
   const ui_minimap = iframe.document.createElement("button")
   const minimap_img = iframe.document.createElement("img")
   minimap_img.src = "textures/ui/minimap.png"
@@ -280,42 +282,69 @@ function toggleMap(hideElem: HTMLElement, showElem: HTMLElement){
 
 var boatMesh: BABYLON.Mesh
 var sceneMeshes: BABYLON.ISceneLoaderAsyncResult;
+var oceanCamera: BABYLON.FollowCamera; 
+var shipCamera: BABYLON.FollowCamera;
 async function loadBoatMesh(scene: BABYLON.Scene){
-    sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
-    console.log(sceneMeshes.meshes)
-    for (let mesh of sceneMeshes.meshes){
-      if (mesh.name.includes('hull')){//BOAT
-        boatMesh = <BABYLON.Mesh>mesh
-        addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, camera);
+    //sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
+    await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene)
+    console.log(scene)
+    boatMesh = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "BOAT"})
+    const mast = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "mast"})
+    oceanCamera = <BABYLON.FollowCamera> scene.cameras.find((camera) => { return camera.name == "OceanCamera"})
+    shipCamera = <BABYLON.FollowCamera> scene.cameras.find((camera) => { return camera.name == "ShipCamera"})
+    console.log(scene.cameras)
+    for (let mesh of scene.meshes){
+      if (mesh.name == "gaff" || mesh.name == "boom"){
+        mast.addChild(mesh)
+      }
+      if (mesh.name == "bowsprit" || mesh.name == "cabin"){
+        boatMesh.addChild(mesh)
       }
     }
+    boatMesh.addChild(mast)
+    if (boatMesh){
+      addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
+    }
+    // for (let mesh of sceneMeshes.meshes){
+    //   if (mesh.name.includes('BOAT')){//BOAT
+    //     boatMesh = <BABYLON.Mesh>mesh
+    //     addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, camera);
+    //     break;
+    //   }
+    // }
     //y is height, x and z are width and length, rotation is in radians
     
 }
 
-function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector3, rotation: BABYLON.Vector3, camera?: BABYLON.FollowCamera){
+function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector3, rotation: BABYLON.Vector3, cameras?: BABYLON.FollowCamera[]){
   boatRoot = new BABYLON.TransformNode("boatTransform");
   var boatMat: BABYLON.StandardMaterial;
-  
-  boatObj = <BABYLON.Mesh> mesh
+  console.log(mesh)
+  boatObj = mesh
   boatMat = new BABYLON.StandardMaterial("boatMat")
   boatMat.diffuseColor = new BABYLON.Color3(97/255, 38/255, 0);
   boatObj.material = boatMat
+  
+  if (cameras){
+    oceanCamera.parent = boatRoot
+    shipCamera.parent = boatObj
+    scene.activeCamera = oceanCamera
+  }
 
   boatObj.parent = boatRoot
   boatRoot.position = pos
   boatRoot.scaling = scale
   boatObj.rotation = rotation
-
-  if (camera){
-    camera.position = new BABYLON.Vector3(0, 30, -3)
-    camera.setTarget(new BABYLON.Vector3(0, -10, -3))
-    camera.fov = 1.1
-    camera.parent = boatRoot;
-    //camera.attachControl();
-    //camera.cameraAcceleration = 1;
-    //camera.maxCameraSpeed = 10;
-  }
+  
+  // if (camera){
+  //   camera.position = new BABYLON.Vector3(0, 30, -3)
+  //   camera.setTarget(new BABYLON.Vector3(0, -10, -3))
+  //   camera.fov = 1.1
+  //   camera.parent = boatRoot;
+  //   //camera.attachControl();
+  //   //camera.cameraAcceleration = 1;
+  //   //camera.maxCameraSpeed = 10;
+  // }
 
   //console.log(boatRoot) 
 }
@@ -326,6 +355,7 @@ export function addOtherBoat(player: GlobalClientLocation){
 
 //https://stackoverflow.com/questions/251420/invoking-javascript-code-in-an-iframe-from-the-parent-page
 //https://www.reddit.com/r/javascript/comments/657ma6/attempting_to_call_parent_function_from_iframe_is/
+var scene: BABYLON.Scene;
 async function startGame(){//parent.getWebsocket()){
   ws.addEventListener("open", async () => {
     //if (engine == null) {
@@ -339,7 +369,7 @@ async function startGame(){//parent.getWebsocket()){
 
     //console.log("made here")
     //console.log(iframe.window.document.body.children)
-    const scene = await createWaterScene(engine, canvas);
+    scene = await createWaterScene(engine, canvas);
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
@@ -353,6 +383,25 @@ async function startGame(){//parent.getWebsocket()){
     //   try { engine = await createWaterScene; } catch {}
     // }
   })
+}
+
+var shipView = false
+function changeShipView(){
+  if (shipView){
+    //camera.fov = 1.1
+    scene.activeCamera = oceanCamera
+    shipView = false
+    //camera.parent = boatMesh.parent
+    
+  }
+  else{
+    scene.activeCamera = shipCamera
+    // camera.fov = .5
+    shipView = true
+    // camera.parent = boatMesh
+    // camera.rotationOffset
+  }
+  
 }
 
 
@@ -486,6 +535,10 @@ function addKeyListeners(){
       }
       currentAction = moveBoat
       pressedMoveKeys.push(key)
+
+      if (key == "Control"){
+        changeShipView()
+      }
     }
   })
 

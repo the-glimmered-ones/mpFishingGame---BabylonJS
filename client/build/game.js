@@ -99,6 +99,7 @@ function createWaterScene(engine, canvas) {
 var chatDisplay;
 function setupUI() {
   const body = iframe.document.body;
+  body.style.flexDirection = "row";
   const ui_minimap = iframe.document.createElement("button");
   const minimap_img = iframe.document.createElement("img");
   minimap_img.src = "textures/ui/minimap.png";
@@ -244,38 +245,59 @@ function toggleMap(hideElem, showElem) {
   showElem.style.visibility = "visible";
 }
 var boatMesh;
-var sceneMeshes;
+var oceanCamera;
+var shipCamera;
 async function loadBoatMesh(scene) {
-  sceneMeshes = await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene);
-  console.log(sceneMeshes.meshes);
-  for (let mesh of sceneMeshes.meshes) {
-    if (mesh.name.includes("hull")) {
-      boatMesh = mesh;
-      addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, camera);
+  await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
+  console.log(scene);
+  boatMesh = scene.meshes.find((mesh) => {
+    return mesh.name == "BOAT";
+  });
+  const mast = scene.meshes.find((mesh) => {
+    return mesh.name == "mast";
+  });
+  oceanCamera = scene.cameras.find((camera) => {
+    return camera.name == "OceanCamera";
+  });
+  shipCamera = scene.cameras.find((camera) => {
+    return camera.name == "ShipCamera";
+  });
+  console.log(scene.cameras);
+  for (let mesh of scene.meshes) {
+    if (mesh.name == "gaff" || mesh.name == "boom") {
+      mast.addChild(mesh);
+    }
+    if (mesh.name == "bowsprit" || mesh.name == "cabin") {
+      boatMesh.addChild(mesh);
     }
   }
+  boatMesh.addChild(mast);
+  if (boatMesh) {
+    addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
+  }
 }
-function addBoat(mesh, pos, scale, rotation, camera) {
+function addBoat(mesh, pos, scale, rotation, cameras) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
   var boatMat;
+  console.log(mesh);
   boatObj = mesh;
   boatMat = new BABYLON.StandardMaterial("boatMat");
   boatMat.diffuseColor = new BABYLON.Color3(97 / 255, 38 / 255, 0);
   boatObj.material = boatMat;
+  if (cameras) {
+    oceanCamera.parent = boatRoot;
+    shipCamera.parent = boatObj;
+    scene.activeCamera = oceanCamera;
+  }
   boatObj.parent = boatRoot;
   boatRoot.position = pos;
   boatRoot.scaling = scale;
   boatObj.rotation = rotation;
-  if (camera) {
-    camera.position = new BABYLON.Vector3(0, 30, -3);
-    camera.setTarget(new BABYLON.Vector3(0, -10, -3));
-    camera.fov = 1.1;
-    camera.parent = boatRoot;
-  }
 }
 function addOtherBoat(player) {
   addBoat(boatMesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0));
 }
+var scene;
 async function startGame() {
   ws.addEventListener("open", async () => {
     canvas = iframe.document.getElementById("renderCanvas");
@@ -283,7 +305,7 @@ async function startGame() {
     let createScene = createWaterScene;
     if (!createScene)
       throw new Error("No createScene() export found.");
-    const scene = await createWaterScene(engine, canvas);
+    scene = await createWaterScene(engine, canvas);
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener("resize", () => {
@@ -297,6 +319,16 @@ async function startGame() {
     addKeyListeners();
     setupUI();
   });
+}
+var shipView = false;
+function changeShipView() {
+  if (shipView) {
+    scene.activeCamera = oceanCamera;
+    shipView = false;
+  } else {
+    scene.activeCamera = shipCamera;
+    shipView = true;
+  }
 }
 var acceleration = 0.2;
 var MAX_VELOCITY = 2;
@@ -390,6 +422,9 @@ function addKeyListeners() {
       }
       currentAction = moveBoat;
       pressedMoveKeys.push(key);
+      if (key == "Control") {
+        changeShipView();
+      }
     }
   });
   canvas.addEventListener("keyup", (event) => {
