@@ -115,7 +115,7 @@ ws.addEventListener("message", (event) => {
             nameWarning.style.display = "block"
             nameWarning.textContent = "This name is already taken"
             break
-        case ServerPacketTypes.INVALID_NAME_DETECTED://TODO show some kind of error message by the name box
+        case ServerPacketTypes.INVALID_NAME_DETECTED:
             nameWarning.style.visibility = "visible"
             nameWarning.style.display = "block"
             nameWarning.textContent = "Please use a valid name"

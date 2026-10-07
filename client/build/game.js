@@ -93,7 +93,7 @@ function createWaterScene(engine, canvas) {
   water.addToRenderList(skybox);
   water.addToRenderList(ground);
   waterMesh.material = water;
-  loadBoatMesh(scene);
+  loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
   return scene;
 }
 var chatDisplay;
@@ -247,7 +247,7 @@ function toggleMap(hideElem, showElem) {
 var boatMesh;
 var oceanCamera;
 var shipCamera;
-async function loadBoatMesh(scene) {
+async function loadBoatMesh(scene, pos) {
   await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
   console.log(scene);
   boatMesh = scene.meshes.find((mesh) => {
@@ -262,6 +262,7 @@ async function loadBoatMesh(scene) {
   shipCamera = scene.cameras.find((camera) => {
     return camera.name == "ShipCamera";
   });
+  camera = oceanCamera;
   console.log(scene.cameras);
   for (let mesh of scene.meshes) {
     if (mesh.name == "gaff" || mesh.name == "boom") {
@@ -272,6 +273,7 @@ async function loadBoatMesh(scene) {
     }
   }
   boatMesh.addChild(mast);
+  boatMesh.position = pos;
   if (boatMesh) {
     addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
   }
@@ -284,9 +286,17 @@ function addBoat(mesh, pos, scale, rotation, cameras) {
   boatMat = new BABYLON.StandardMaterial("boatMat");
   boatMat.diffuseColor = new BABYLON.Color3(97 / 255, 38 / 255, 0);
   boatObj.material = boatMat;
+  camera.dispose();
   if (cameras) {
     oceanCamera.parent = boatRoot;
-    shipCamera.parent = boatObj;
+    shipCamera.parent = boatRoot;
+    console.log("cameras added");
+    oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3));
+    oceanCamera.setTarget(new BABYLON.Vector3(0, -10, -3));
+    oceanCamera.fov = 1.1;
+    shipCamera.position = boatObj.position.add(new BABYLON.Vector3(-8, 35, -40));
+    shipCamera.setTarget(new BABYLON.Vector3(boatObj.absolutePosition.x, 3, boatObj.absolutePosition.z));
+    shipCamera.fov = 0.3;
     scene.activeCamera = oceanCamera;
   }
   boatObj.parent = boatRoot;
@@ -351,18 +361,17 @@ function moveBoat() {
   }
   if (inputNS != "") {
     if (inputNS == "N") {
-      if (velocity > 0)
-        velocity = -0.2;
-      accelerate(false);
-      moveNS = -1 * moveNS + velocity;
-    } else if (inputNS == "S") {
       if (velocity < 0)
         velocity = 0.2;
-      accelerate(true);
+      accelerate(false);
       moveNS = moveNS + velocity;
+    } else if (inputNS == "S") {
+      if (velocity > 0)
+        velocity = -0.2;
+      accelerate(true);
+      moveNS = -1 * moveNS + velocity;
     }
     boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0));
-    camera.position = new BABYLON.Vector3(boatObj.position.x, camera.position.y, boatObj.position.z - 3);
   }
   if (inputWE != "") {
     velocity = 0;
@@ -373,7 +382,7 @@ function moveBoat() {
   }
 }
 function accelerate(reversing) {
-  if (reversing) {
+  if (!reversing) {
     if (velocity < MAX_VELOCITY)
       velocity += acceleration;
     if (velocity > MAX_VELOCITY)
@@ -387,7 +396,7 @@ function accelerate(reversing) {
   }
 }
 function decelerate(reversing) {
-  if (reversing) {
+  if (!reversing) {
     if (velocity < 0)
       velocity += acceleration;
     if (velocity > 0)
@@ -424,6 +433,18 @@ function addKeyListeners() {
       pressedMoveKeys.push(key);
       if (key == "Control") {
         changeShipView();
+      } else if (key == "ArrowLeft") {
+        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z);
+      } else if (key == "ArrowRight") {
+        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x + 5, shipCamera.position.y, shipCamera.position.z);
+      } else if (key == "<") {
+        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y, shipCamera.position.z - 5);
+      } else if (key == ">") {
+        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y, shipCamera.position.z + 5);
+      } else if (key == "ArrowUp") {
+        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y + 5, shipCamera.position.z);
+      } else if (key == "ArrowDown") {
+        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y - 5, shipCamera.position.z);
       }
     }
   });
@@ -452,12 +473,17 @@ async function queueClientAction() {
         console.log("decelerate");
         decelerate(velocity < 0 ? true : false);
         boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0));
-        camera.position = new BABYLON.Vector3(boatObj.position.x, camera.position.y, boatObj.position.z - 3);
       }
     }
     await currentAction();
     currentAction = () => {};
     actionParams = [];
+    if (shipView) {
+      shipCamera.position = boatObj.position.add(new BABYLON.Vector3(-8, 40, -40));
+      shipCamera.setTarget(new BABYLON.Vector3(boatObj.position.x, 3, boatObj.position.z));
+    } else {
+      oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3));
+    }
     updateVisibleChatHistory();
   }
 }
