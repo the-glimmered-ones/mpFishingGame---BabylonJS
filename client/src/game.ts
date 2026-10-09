@@ -285,6 +285,9 @@ var oceanCamera: BABYLON.FollowCamera;
 var shipCamera: BABYLON.FollowCamera;
 var tiller: BABYLON.AbstractMesh;
 var tillerRotationGizmo: BABYLON.PlaneRotationGizmo;
+var startX: number;
+var endX = null;
+var rotatingTiller: boolean = false;
 async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     //sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
     await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene)
@@ -299,31 +302,61 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
 
     boatMesh = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "BOAT"})
     const mast = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "mast"})
-
+    tiller = <BABYLON.AbstractMesh> scene.meshes.find((mesh) => { return mesh.name == "tiller"})
     boatMesh.material = woodMat
     mast.material = woodMat
+    tiller.material = lightWoodMat
+    tiller.addBehavior(new BABYLON.SixDofDragBehavior())
 
     oceanCamera = <BABYLON.FollowCamera> scene.cameras.find((camera) => { return camera.name == "OceanCamera"})
     shipCamera = <BABYLON.FollowCamera> scene.cameras.find((camera) => { return camera.name == "ShipCamera"})
     camera = oceanCamera
     console.log(scene.cameras)
 
-    tiller = <BABYLON.AbstractMesh> scene.meshes.find((mesh) => { return mesh.name == "tiller"})
-    tiller.material = lightWoodMat
     var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
-    tillerRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0,1,0), BABYLON.Color3.Yellow(), utilLayer)
+    const gizmoManager = new BABYLON.GizmoManager(scene);
+    gizmoManager.rotationGizmoEnabled = false;
+    gizmoManager.positionGizmoEnabled = false;
+    gizmoManager.boundingBoxGizmoEnabled = true;
+    gizmoManager.attachableMeshes = [tiller, <BABYLON.AbstractMesh> mast];
+    if (gizmoManager.gizmos.boundingBoxGizmo){
+      gizmoManager.gizmos.boundingBoxGizmo.setEnabledRotationAxis("y");
+      gizmoManager.gizmos.boundingBoxGizmo.setEnabledScaling(false)
+      gizmoManager.gizmos.boundingBoxGizmo.rotationSphereSize = .4
+      gizmoManager.gizmos.boundingBoxGizmo.onRotationSphereDragObservable.add(async (e) => {
+        if (gizmoManager.gizmos.boundingBoxGizmo?.attachedMesh == tiller){
+
+          console.log(startX)//TODO why is this undefined
+          //if (gizmoManager.gizmos.boundingBoxGizmo.isDragging){
+            rotatingTiller = true
+            //gizmoManager.gizmos.boundingBoxGizmo.releaseDrag()
+          //}
+          // canvas.addEventListener("mouseup", (e) => { 
+          //   isMouseDown = false; 
+          //   endX = e.pageX;
+          //   console.log(`mouse up, start: ${startX}, end: ${endX}`)
+          //   if (startX > endX)//move left
+          //     tiller.rotation = new BABYLON.Vector3(0, 270 * (Math.PI/180), 0)
+          //   if (endX > startX)//move right
+          //     tiller.rotation = new BABYLON.Vector3(0, 90 * (Math.PI/180), 0)
+          // }, {"capture":true})
+        }
+      })
+    }
+
+    //tillerRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0,1,0), BABYLON.Color3.Yellow(), utilLayer)
     //tillerRotationGizmo = new BABYLON.RotationGizmo(utilLayer)
     //tiller.scaling = new BABYLON.Vector3(tiller.scaling.x,.144,.144)
-    tillerRotationGizmo.attachedMesh = tiller
-    tillerRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
-    tillerRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-    tillerRotationGizmo.scaleRatio = .3
-    tillerRotationGizmo.sensitivity = .1
-    tillerRotationGizmo.dragBehavior.onDragObservable.add((e) => {
-      console.log(e)
-      //tiller.rotation = new BABYLON.Vector3(0,tiller.rotation.y + tillerRotationGizmo.angle,0)
-      tiller.addRotation(0,e.dragDistance,0)
-    });
+    //tillerRotationGizmo.attachedMesh = tiller
+    // tillerRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
+    // tillerRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
+    // tillerRotationGizmo.scaleRatio = .3
+    // tillerRotationGizmo.sensitivity = .1
+    // tillerRotationGizmo.dragBehavior.onDragObservable.add((e) => {
+    //   console.log(e)
+    //   //tiller.rotation = new BABYLON.Vector3(0,tiller.rotation.y + tillerRotationGizmo.angle,0)
+    //   tiller.addRotation(0,e.dragDistance,0)
+    // });
 
     for (let mesh of scene.meshes){
       if (mesh.name == "gaff" || mesh.name == "boom"){
@@ -425,14 +458,14 @@ function changeShipView(){
   if (shipView){
     //camera.fov = 1.1
     scene.activeCamera = oceanCamera
-    tillerRotationGizmo.attachedMesh = null
+    //tillerRotationGizmo.attachedMesh = null
     shipView = false
     //camera.parent = boatMesh.parent
     
   }
   else{
     scene.activeCamera = shipCamera
-    tillerRotationGizmo.attachedMesh = tiller
+    //tillerRotationGizmo.attachedMesh = tiller
     // camera.fov = .5
     shipView = true
     // camera.parent = boatMesh
@@ -607,6 +640,19 @@ function addKeyListeners(){
     }
     if (key == "Control"){
         changeShipView()
+    }
+  })
+  
+  canvas.addEventListener("mousedown", (e) => { startX = e.screenX })
+  canvas.addEventListener("mouseup", (e) => { 
+    endX = e.pageX
+    if (rotatingTiller){
+      console.log(`mouse up, start: ${startX}, end: ${endX}`)
+      if (startX > endX)//move left
+        tiller.rotation = new BABYLON.Vector3(0, 270 * (Math.PI/180), 0)
+      if (endX > startX)//move right
+        tiller.rotation = new BABYLON.Vector3(0, 90 * (Math.PI/180), 0)
+      rotatingTiller = false
     }
   })
 

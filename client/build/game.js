@@ -59,8 +59,8 @@ function setJoinedWithName(joinName) {
   name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine, canvas) {
-  var scene = new BABYLON.Scene(engine);
+function createWaterScene(engine2, canvas2) {
+  var scene = new BABYLON.Scene(engine2);
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -248,7 +248,9 @@ var boatMesh;
 var oceanCamera;
 var shipCamera;
 var tiller;
-var tillerRotationGizmo;
+var startX;
+var endX = null;
+var rotatingTiller = false;
 async function loadBoatMesh(scene, pos) {
   await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
   console.log(scene);
@@ -264,31 +266,38 @@ async function loadBoatMesh(scene, pos) {
   const mast = scene.meshes.find((mesh) => {
     return mesh.name == "mast";
   });
-  boatMesh.material = woodMat;
-  mast.material = woodMat;
-  oceanCamera = scene.cameras.find((camera) => {
-    return camera.name == "OceanCamera";
-  });
-  shipCamera = scene.cameras.find((camera) => {
-    return camera.name == "ShipCamera";
-  });
-  camera = oceanCamera;
-  console.log(scene.cameras);
   tiller = scene.meshes.find((mesh) => {
     return mesh.name == "tiller";
   });
+  boatMesh.material = woodMat;
+  mast.material = woodMat;
   tiller.material = lightWoodMat;
-  var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
-  tillerRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0, 1, 0), BABYLON.Color3.Yellow(), utilLayer);
-  tillerRotationGizmo.attachedMesh = tiller;
-  tillerRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
-  tillerRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-  tillerRotationGizmo.scaleRatio = 0.3;
-  tillerRotationGizmo.sensitivity = 0.1;
-  tillerRotationGizmo.dragBehavior.onDragObservable.add((e) => {
-    console.log(e);
-    tiller.addRotation(0, e.dragDistance, 0);
+  tiller.addBehavior(new BABYLON.SixDofDragBehavior);
+  oceanCamera = scene.cameras.find((camera2) => {
+    return camera2.name == "OceanCamera";
   });
+  shipCamera = scene.cameras.find((camera2) => {
+    return camera2.name == "ShipCamera";
+  });
+  camera = oceanCamera;
+  console.log(scene.cameras);
+  var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
+  const gizmoManager = new BABYLON.GizmoManager(scene);
+  gizmoManager.rotationGizmoEnabled = false;
+  gizmoManager.positionGizmoEnabled = false;
+  gizmoManager.boundingBoxGizmoEnabled = true;
+  gizmoManager.attachableMeshes = [tiller, mast];
+  if (gizmoManager.gizmos.boundingBoxGizmo) {
+    gizmoManager.gizmos.boundingBoxGizmo.setEnabledRotationAxis("y");
+    gizmoManager.gizmos.boundingBoxGizmo.setEnabledScaling(false);
+    gizmoManager.gizmos.boundingBoxGizmo.rotationSphereSize = 0.4;
+    gizmoManager.gizmos.boundingBoxGizmo.onRotationSphereDragObservable.add(async (e) => {
+      if (gizmoManager.gizmos.boundingBoxGizmo?.attachedMesh == tiller) {
+        console.log(startX);
+        rotatingTiller = true;
+      }
+    });
+  }
   for (let mesh of scene.meshes) {
     if (mesh.name == "gaff" || mesh.name == "boom") {
       mesh.material = woodMat;
@@ -359,11 +368,9 @@ var shipView = false;
 function changeShipView() {
   if (shipView) {
     scene.activeCamera = oceanCamera;
-    tillerRotationGizmo.attachedMesh = null;
     shipView = false;
   } else {
     scene.activeCamera = shipCamera;
-    tillerRotationGizmo.attachedMesh = tiller;
     shipView = true;
   }
 }
@@ -402,7 +409,7 @@ function moveBoat() {
   }
   if (inputWE != "") {
     velocity = 0;
-    const tiller = scene.meshes.find((mesh) => {
+    const tiller2 = scene.meshes.find((mesh) => {
       return mesh.name == "tiller";
     });
     if (inputWE == "W") {
@@ -486,6 +493,20 @@ function addKeyListeners() {
       changeShipView();
     }
   });
+  canvas.addEventListener("mousedown", (e) => {
+    startX = e.screenX;
+  });
+  canvas.addEventListener("mouseup", (e) => {
+    endX = e.pageX;
+    if (rotatingTiller) {
+      console.log(`mouse up, start: ${startX}, end: ${endX}`);
+      if (startX > endX)
+        tiller.rotation = new BABYLON.Vector3(0, 270 * (Math.PI / 180), 0);
+      if (endX > startX)
+        tiller.rotation = new BABYLON.Vector3(0, 90 * (Math.PI / 180), 0);
+      rotatingTiller = false;
+    }
+  });
 }
 function updateVisibleChatHistory() {}
 var currentAction = () => {};
@@ -520,9 +541,9 @@ async function queueClientAction() {
   }
 }
 export {
-  addOtherBoat,
-  displayInboundChat,
-  gameLoaded,
+  setJoinedWithName,
   linkWsToGame,
-  setJoinedWithName
+  gameLoaded,
+  displayInboundChat,
+  addOtherBoat
 };
