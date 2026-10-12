@@ -272,12 +272,11 @@ async function loadBoatMesh(scene, pos) {
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
-  tiller.addBehavior(new BABYLON.SixDofDragBehavior);
-  oceanCamera = scene.cameras.find((camera2) => {
-    return camera2.name == "OceanCamera";
+  oceanCamera = scene.cameras.find((camera) => {
+    return camera.name == "OceanCamera";
   });
-  shipCamera = scene.cameras.find((camera2) => {
-    return camera2.name == "ShipCamera";
+  shipCamera = scene.cameras.find((camera) => {
+    return camera.name == "ShipCamera";
   });
   camera = oceanCamera;
   console.log(scene.cameras);
@@ -291,6 +290,12 @@ async function loadBoatMesh(scene, pos) {
     gizmoManager.gizmos.boundingBoxGizmo.setEnabledRotationAxis("y");
     gizmoManager.gizmos.boundingBoxGizmo.setEnabledScaling(false);
     gizmoManager.gizmos.boundingBoxGizmo.rotationSphereSize = 0.4;
+    tiller.behaviors.splice(0);
+    const dragbehavior = new BABYLON.PointerDragBehavior;
+    dragbehavior.enabled = false;
+    tiller.addBehavior(dragbehavior);
+    console.log(gizmoManager.boundingBoxDragBehavior);
+    gizmoManager.boundingBoxDragBehavior.disableMovement = true;
     gizmoManager.gizmos.boundingBoxGizmo.onRotationSphereDragObservable.add(async (e) => {
       if (gizmoManager.gizmos.boundingBoxGizmo?.attachedMesh == tiller) {
         console.log(startX);
@@ -493,20 +498,24 @@ function addKeyListeners() {
       changeShipView();
     }
   });
-  canvas.addEventListener("mousedown", (e) => {
+  canvas.removeAttribute("style");
+  canvas.removeAttribute("touch-action");
+  canvas.addEventListener("mousedown", function(e) {
+    console.log("mousedown");
     startX = e.screenX;
-  });
-  canvas.addEventListener("mouseup", (e) => {
+    e.preventDefault();
+  }, { capture: true });
+  iframe.document.body.onmouseup = function(e) {
     endX = e.pageX;
+    console.log(`mouse up, start: ${startX}, end: ${endX}`);
     if (rotatingTiller) {
-      console.log(`mouse up, start: ${startX}, end: ${endX}`);
       if (startX > endX)
         tiller.rotation = new BABYLON.Vector3(0, 270 * (Math.PI / 180), 0);
       if (endX > startX)
         tiller.rotation = new BABYLON.Vector3(0, 90 * (Math.PI / 180), 0);
       rotatingTiller = false;
     }
-  });
+  };
 }
 function updateVisibleChatHistory() {}
 var currentAction = () => {};

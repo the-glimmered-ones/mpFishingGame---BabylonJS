@@ -368,12 +368,20 @@ async function loadBoatMesh(scene, pos) {
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
+<<<<<<< HEAD
   tiller.addBehavior(new BABYLON.SixDofDragBehavior);
   oceanCamera = scene.cameras.find((camera2) => {
     return camera2.name == "OceanCamera";
   });
   shipCamera = scene.cameras.find((camera2) => {
     return camera2.name == "ShipCamera";
+=======
+  oceanCamera = scene.cameras.find((camera) => {
+    return camera.name == "OceanCamera";
+  });
+  shipCamera = scene.cameras.find((camera) => {
+    return camera.name == "ShipCamera";
+>>>>>>> 1b14a0a (disabled dragging to change position of tiller and mast)
   });
   camera = oceanCamera;
   console.log(scene.cameras);
@@ -387,6 +395,15 @@ async function loadBoatMesh(scene, pos) {
     gizmoManager.gizmos.boundingBoxGizmo.setEnabledRotationAxis("y");
     gizmoManager.gizmos.boundingBoxGizmo.setEnabledScaling(false);
     gizmoManager.gizmos.boundingBoxGizmo.rotationSphereSize = 0.4;
+<<<<<<< HEAD
+=======
+    tiller.behaviors.splice(0);
+    const dragbehavior = new BABYLON.PointerDragBehavior;
+    dragbehavior.enabled = false;
+    tiller.addBehavior(dragbehavior);
+    console.log(gizmoManager.boundingBoxDragBehavior);
+    gizmoManager.boundingBoxDragBehavior.disableMovement = true;
+>>>>>>> 1b14a0a (disabled dragging to change position of tiller and mast)
     gizmoManager.gizmos.boundingBoxGizmo.onRotationSphereDragObservable.add(async (e) => {
       if (gizmoManager.gizmos.boundingBoxGizmo?.attachedMesh == tiller) {
         console.log(startX);
@@ -581,6 +598,7 @@ function addKeyListeners() {
       changeShipView();
     }
   });
+<<<<<<< HEAD
   canvas.addEventListener("mousedown", (e) => {
     startX = e.screenX;
   });
@@ -588,13 +606,30 @@ function addKeyListeners() {
     endX = e.pageX;
     if (rotatingTiller) {
       console.log(`mouse up, start: ${startX}, end: ${endX}`);
+=======
+  canvas.removeAttribute("style");
+  canvas.removeAttribute("touch-action");
+  canvas.addEventListener("mousedown", function(e) {
+    console.log("mousedown");
+    startX = e.screenX;
+    e.preventDefault();
+  }, { capture: true });
+  iframe.document.body.onmouseup = function(e) {
+    endX = e.pageX;
+    console.log(`mouse up, start: ${startX}, end: ${endX}`);
+    if (rotatingTiller) {
+>>>>>>> 1b14a0a (disabled dragging to change position of tiller and mast)
       if (startX > endX)
         tiller.rotation = new BABYLON.Vector3(0, 270 * (Math.PI / 180), 0);
       if (endX > startX)
         tiller.rotation = new BABYLON.Vector3(0, 90 * (Math.PI / 180), 0);
       rotatingTiller = false;
     }
+<<<<<<< HEAD
   });
+=======
+  };
+>>>>>>> 1b14a0a (disabled dragging to change position of tiller and mast)
 }
 function updateVisibleChatHistory() {}
 async function queueClientAction() {
@@ -664,7 +699,7 @@ addEventListener("load", async () => {
             </style>         
         </head>
         <body>
-            <canvas id=renderCanvas disabled></canvas>
+            <canvas id=renderCanvas></canvas>
             
         </body>
     </html>`;

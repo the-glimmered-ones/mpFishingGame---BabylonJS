@@ -303,10 +303,10 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     boatMesh = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "BOAT"})
     const mast = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "mast"})
     tiller = <BABYLON.AbstractMesh> scene.meshes.find((mesh) => { return mesh.name == "tiller"})
+    tiller = <BABYLON.AbstractMesh> scene.meshes.find((mesh) => { return mesh.name == "tiller"})
     boatMesh.material = woodMat
     mast.material = woodMat
     tiller.material = lightWoodMat
-    tiller.addBehavior(new BABYLON.SixDofDragBehavior())
 
     oceanCamera = <BABYLON.FollowCamera> scene.cameras.find((camera) => { return camera.name == "OceanCamera"})
     shipCamera = <BABYLON.FollowCamera> scene.cameras.find((camera) => { return camera.name == "ShipCamera"})
@@ -323,6 +323,11 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
       gizmoManager.gizmos.boundingBoxGizmo.setEnabledRotationAxis("y");
       gizmoManager.gizmos.boundingBoxGizmo.setEnabledScaling(false)
       gizmoManager.gizmos.boundingBoxGizmo.rotationSphereSize = .4
+      tiller.behaviors.splice(0)
+      const dragbehavior = new BABYLON.PointerDragBehavior
+      dragbehavior.enabled = false
+      tiller.addBehavior(dragbehavior)
+      gizmoManager.boundingBoxDragBehavior.disableMovement = true
       gizmoManager.gizmos.boundingBoxGizmo.onRotationSphereDragObservable.add(async (e) => {
         if (gizmoManager.gizmos.boundingBoxGizmo?.attachedMesh == tiller){
 
@@ -642,19 +647,23 @@ function addKeyListeners(){
         changeShipView()
     }
   })
-  
-  canvas.addEventListener("mousedown", (e) => { startX = e.screenX })
-  canvas.addEventListener("mouseup", (e) => { 
+  canvas.removeAttribute("style")
+  canvas.removeAttribute("touch-action")
+  canvas.addEventListener("mousedown", function(e: MouseEvent){
+    console.log("mousedown"); startX = e.screenX; e.preventDefault();
+  },{"capture":true})
+
+  iframe.document.body.onmouseup = function(e){
     endX = e.pageX
+    console.log(`mouse up, start: ${startX}, end: ${endX}`)
     if (rotatingTiller){
-      console.log(`mouse up, start: ${startX}, end: ${endX}`)
       if (startX > endX)//move left
         tiller.rotation = new BABYLON.Vector3(0, 270 * (Math.PI/180), 0)
       if (endX > startX)//move right
         tiller.rotation = new BABYLON.Vector3(0, 90 * (Math.PI/180), 0)
       rotatingTiller = false
     }
-  })
+  }
 
 }
 

@@ -37,7 +37,7 @@ addEventListener("load", async () => {
             </style>         
         </head>
         <body>
-            <canvas id=renderCanvas disabled></canvas>
+            <canvas id=renderCanvas></canvas>
             
         </body>
     </html>`;//<script src="${import("./game.js")}" type=module></script> //loads in index again
