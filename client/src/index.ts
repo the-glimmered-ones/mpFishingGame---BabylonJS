@@ -69,6 +69,15 @@ for (let btn of shipSelectRadioBtns){
             case "selectSubmarine":
                 ship = ShipTypes.SUBMARINE
                 break;
+            case "selectCargo":
+                ship = ShipTypes.CARGO
+                break;
+            case "selectDredger":
+                ship = ShipTypes.DREDGER
+                break;
+            case "selectSurveyor":
+                ship = ShipTypes.SURVEYOR
+                break;
             default:
                 return;
             //send packet with player and check if name exists, dupe returns error
@@ -85,7 +94,7 @@ for (let btn of shipSelectRadioBtns){
         }
     })
     btn.addEventListener("keyup", (event) => {
-        if (btn.type == "radio"){
+        if (btn.type == "radio" && !event.key.includes("Arrow")){
             nameInput.focus()
         }
     })

@@ -68,19 +68,26 @@
             <div class="chooseShipOverlay gameSize" id="chooseShipOverlay">
             <div style="height: fit-content;width: fit-content;align-self: center;background-color: antiquewhite;box-shadow: 5px 3px 2px;visibility: inherit;padding: 10px;display: flex;align-items: center;border: 3px solid brown;flex-direction: row;">
                 <div>
-                    <fieldset style="width:stretch; height: max-content; margin: 0px 0px 10px 0px;">
-                        <legend>Select a class</legend>
+                    <fieldset style="width:stretch; height: max-content; margin: 0px 0px 10px 0px; -webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">
+                        <legend style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Select a class</legend>
                         <input type="radio" name="selectClass" id="selectSailboat" style="visibility: inherit;" value="selectSailboat"></button>
-                        <label for="selectSailboat">Sailboat</label>
+                        <label for="selectSailboat" style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Sailboat</label>
                         <input type="radio" name="selectClass" id="selectTrawler" style="visibility: inherit;" value="selectTrawler"></button>
-                        <label for="selectTrawler">Trawler</label>
+                        <label for="selectTrawler" style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Trawler</label>
+                        <input type="radio" name="selectClass" id="selectDredger" style="visibility: inherit;" value="selectDredger"></button>
+                        <label for="selectDredger" style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Dredger</label>
+                        <br>
+                        <input type="radio" name="selectClass" id="selectCargo" style="visibility: inherit;" value="selectCargo"></button>
+                        <label for="selectCargo" style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Cargo</label>
+                        <input type="radio" name="selectClass" id="selectSurveyor" style="visibility: inherit;" value="selectSurveyor"></button>
+                        <label for="selectSurveyor" style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Surveyor</label>
                         <input type="radio" name="selectClass" id="selectSubmarine" style="visibility: inherit;" value="selectSubmarine"></button>
-                        <label for="selectSubmarine">Submarine</label>
+                        <label for="selectSubmarine" style="-webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Submarine</label>
                     </fieldset>
                     <fieldset style="width: stretch;height:max-content">
-                        <legend style="text-align: left;">Name</legend>
+                        <legend style="text-align: left; -webkit-user-select:none;user-select:none;" unselectable="on" onselectstart="return false;">Name</legend>
                         <input type="text" id="nameInput" name="nameInput" style="width: stretch;">
-                        <span id="nameWarning" style="color:red; visibility: hidden; display: none;">This name is already taken</span>
+                        <span id="nameWarning" style="color:red; visibility: hidden; display: none; padding-top: 3px;">This name is already taken</span>
                     </fieldset>
                 </div>
                 <button id="submitNameBtn" style="margin: 0px 10px;height:50%; font-weight: bold;">Submit</button>

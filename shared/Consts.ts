@@ -2,8 +2,10 @@ export const enum ShipTypes {
     "NONE",
     "SAILBOAT",
     "TRAWLER",
+    "DREDGER",
+    "CARGO",
+    "SURVEYOR",
     "SUBMARINE",
-    "DREDGER"
 }
 
 export class PlayerLocation {
