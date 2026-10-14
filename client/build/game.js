@@ -59,8 +59,8 @@ function setJoinedWithName(joinName) {
   name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine, canvas) {
-  var scene = new BABYLON.Scene(engine);
+function createWaterScene(engine2, canvas2) {
+  var scene = new BABYLON.Scene(engine2);
   camera = new BABYLON.FollowCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -269,9 +269,6 @@ async function loadBoatMesh(scene, pos) {
   tiller = scene.meshes.find((mesh) => {
     return mesh.name == "tiller";
   });
-  tiller = scene.meshes.find((mesh) => {
-    return mesh.name == "tiller";
-  });
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
@@ -297,6 +294,7 @@ async function loadBoatMesh(scene, pos) {
     const dragbehavior = new BABYLON.PointerDragBehavior;
     dragbehavior.enabled = false;
     tiller.addBehavior(dragbehavior);
+    console.log(gizmoManager.boundingBoxDragBehavior);
     gizmoManager.boundingBoxDragBehavior.disableMovement = true;
     gizmoManager.gizmos.boundingBoxGizmo.onRotationSphereDragObservable.add(async (e) => {
       if (gizmoManager.gizmos.boundingBoxGizmo?.attachedMesh == tiller) {
@@ -416,7 +414,7 @@ function moveBoat() {
   }
   if (inputWE != "") {
     velocity = 0;
-    const tiller = scene.meshes.find((mesh) => {
+    const tiller2 = scene.meshes.find((mesh) => {
       return mesh.name == "tiller";
     });
     if (inputWE == "W") {
@@ -552,9 +550,9 @@ async function queueClientAction() {
   }
 }
 export {
-  addOtherBoat,
-  displayInboundChat,
-  gameLoaded,
+  setJoinedWithName,
   linkWsToGame,
-  setJoinedWithName
+  gameLoaded,
+  displayInboundChat,
+  addOtherBoat
 };
