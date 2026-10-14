@@ -248,6 +248,7 @@ var boatMesh;
 var oceanCamera;
 var shipCamera;
 var tiller;
+var mast;
 var tillerRotationGizmo;
 async function loadBoatMesh(scene, pos) {
   await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
@@ -261,11 +262,8 @@ async function loadBoatMesh(scene, pos) {
   boatMesh = scene.meshes.find((mesh) => {
     return mesh.name == "BOAT";
   });
-  const mast = scene.meshes.find((mesh) => {
+  mast = scene.meshes.find((mesh) => {
     return mesh.name == "mast";
-  });
-  tiller = scene.meshes.find((mesh) => {
-    return mesh.name == "tiller";
   });
   tiller = scene.meshes.find((mesh) => {
     return mesh.name == "tiller";
@@ -296,15 +294,15 @@ async function loadBoatMesh(scene, pos) {
     let y = (tiller.rotationQuaternion ? tiller.rotationQuaternion.y : tiller.rotation.y) * (180 / Math.PI);
     let factor = Math.round(tiller.scaling.x * 100) / 100;
     tiller.scaling = new BABYLON.Vector3(factor, factor, factor);
-    console.log(tiller.scaling);
     let finalRot = y;
     if (y < -25) {
-      finalRot = -24;
+      finalRot = -25;
     } else if (y > 25) {
-      finalRot = 24;
+      finalRot = 25;
     }
     if (finalRot != y) {
       tillerRotationGizmo.dragBehavior.releaseDrag();
+      tillerRotationGizmo.attachedMesh = null;
     }
     if (tiller.rotationQuaternion) {
       tiller.rotationQuaternion.y = finalRot * (Math.PI / 180);
@@ -512,6 +510,15 @@ function addKeyListeners() {
       changeShipView();
     }
   });
+  scene.onPointerObservable.add((e) => {
+    if (e.type == BABYLON.PointerEventTypes.POINTERDOWN && shipView) {
+      if (e.pickInfo?.pickedMesh == tiller) {
+        tillerRotationGizmo.attachedMesh = tiller;
+      } else if (e.pickInfo?.pickedMesh == mast) {
+        tillerRotationGizmo.attachedMesh = mast;
+      }
+    }
+  });
 }
 function updateVisibleChatHistory() {}
 var currentAction = () => {};
@@ -537,7 +544,7 @@ async function queueClientAction() {
     currentAction = () => {};
     actionParams = [];
     if (shipView) {
-      shipCamera.position = boatObj.position.add(new BABYLON.Vector3(-8, 40, -40));
+      shipCamera.position = boatObj.position.add(new BABYLON.Vector3(-8, 25, -40));
       shipCamera.setTarget(new BABYLON.Vector3(boatObj.position.x, 3, boatObj.position.z));
     } else {
       oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3));
