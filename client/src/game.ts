@@ -400,7 +400,7 @@ async function startGame(){//parent.getWebsocket()){
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
-    scene.debugLayer.show()
+    //scene.debugLayer.show()
     joinedWithName = false
     console.log("scene drawn")
     addKeyListeners()
@@ -453,7 +453,7 @@ function setupGizmos(){
   tillerRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   tillerRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   tillerRotationGizmo.scaleRatio = .3
-  tillerRotationGizmo.sensitivity = .6
+  tillerRotationGizmo.sensitivity = .5
   tillerRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let y = (tiller.rotationQuaternion ? tiller.rotationQuaternion.y : tiller.rotation.y) * (180/Math.PI)
     let factor = Math.round(tiller.scaling.x * 100)/100
@@ -478,7 +478,7 @@ function setupGizmos(){
   mastRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   mastRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   mastRotationGizmo.scaleRatio = .25
-  mastRotationGizmo.sensitivity = .6
+  mastRotationGizmo.sensitivity = .5
   mastRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let y = (mast.rotationQuaternion ? mast.rotationQuaternion.y : mast.rotation.y) * (180/Math.PI)
     mast.scaling = new BABYLON.Vector3(Math.round(mast.scaling.x * 100)/100, Math.round(mast.scaling.y * 100)/100, Math.round(mast.scaling.z * 100)/100)
@@ -523,7 +523,7 @@ function setupGizmos(){
   gaffRotationGizmo.attachedMesh = gaff
   gaffRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   gaffRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-  gaffRotationGizmo.sensitivity = .6
+  gaffRotationGizmo.sensitivity = .5
   gaffRotationGizmo.scaleRatio = .25
   gaffRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let z = (gaff.rotationQuaternion ? gaff.rotationQuaternion.z : gaff.rotation.z) * (180/Math.PI)
