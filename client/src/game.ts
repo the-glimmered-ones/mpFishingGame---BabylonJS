@@ -285,6 +285,7 @@ var oceanCamera: BABYLON.FreeCamera;
 var shipCamera: BABYLON.FreeCamera;
 var tiller: BABYLON.AbstractMesh;
 var mast: BABYLON.AbstractMesh;
+var gaff: BABYLON.AbstractMesh;
 
 async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     //sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
@@ -301,6 +302,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     boatMesh = <BABYLON.Mesh> scene.getNodeByName("BOAT")
     mast = <BABYLON.AbstractMesh> scene.getNodeByName("mast")
     tiller = <BABYLON.AbstractMesh> scene.getNodeByName("tiller")
+    gaff = <BABYLON.AbstractMesh> scene.getMeshByName("gaff")
     boatMesh.material = woodMat
     mast.material = woodMat
     tiller.material = lightWoodMat
@@ -417,12 +419,16 @@ function changeShipView(){
     scene.activeCamera = oceanCamera
     tillerRotationGizmo.attachedMesh = null
     mastRotationGizmo.attachedMesh = null
+    gaffMovementGizmo.attachedMesh = null
+    gaffRotationGizmo.attachedMesh = null
     shipView = false
   }
   else{
     scene.activeCamera = shipCamera
     tillerRotationGizmo.attachedMesh = tiller
     mastRotationGizmo.attachedMesh = mast
+    gaffMovementGizmo.attachedMesh = gaff
+    gaffRotationGizmo.attachedMesh = gaff
     shipView = true
   }
 }
@@ -432,7 +438,6 @@ var mastRotationGizmo: BABYLON.PlaneRotationGizmo;
 var gaffMovementGizmo: BABYLON.AxisDragGizmo;
 var gaffRotationGizmo: BABYLON.PlaneRotationGizmo;
 function setupGizmos(){
-  const gaff = <BABYLON.AbstractMesh>scene.getMeshByName("gaff")
   var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
   tiller.behaviors.splice(0)
   mast.behaviors.splice(0)
@@ -472,12 +477,12 @@ function setupGizmos(){
   mastRotationGizmo.attachedMesh = mast
   mastRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   mastRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-  mastRotationGizmo.scaleRatio = .3
+  mastRotationGizmo.scaleRatio = .25
   mastRotationGizmo.sensitivity = .6
   mastRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let y = (mast.rotationQuaternion ? mast.rotationQuaternion.y : mast.rotation.y) * (180/Math.PI)
     mast.scaling = new BABYLON.Vector3(Math.round(mast.scaling.x * 100)/100, Math.round(mast.scaling.y * 100)/100, Math.round(mast.scaling.z * 100)/100)
-    const gizmoResult = rotateGizmo(y, 25, (mast.rotationQuaternion ? mast.rotationQuaternion : undefined));
+    const gizmoResult = rotateGizmo(y, 35, (mast.rotationQuaternion ? mast.rotationQuaternion : undefined));
     if (gizmoResult.boundsHit){
       mastRotationGizmo.dragBehavior.releaseDrag()
     }
@@ -489,14 +494,14 @@ function setupGizmos(){
         mast.rotation.y = gizmoResult.finalAngle
         break;
     }
-    //console.log(y)
+    console.log(y)
   });
 
   gaffMovementGizmo = new BABYLON.AxisDragGizmo(new BABYLON.Vector3(0,1,0), BABYLON.Color3.Red(), utilLayer, undefined, 3, BABYLON.Color3.Teal())
   gaffMovementGizmo.updateGizmoRotationToMatchAttachedMesh = false;
   gaffMovementGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   gaffMovementGizmo.attachedMesh = gaff
-  gaffMovementGizmo.scaleRatio = .4
+  gaffMovementGizmo.scaleRatio = .35
   gaffMovementGizmo.dragBehavior.onDragObservable.add((e) => {
     const y = gaff.position.y
     //console.log(y)//-3.7, 0.45
@@ -519,7 +524,7 @@ function setupGizmos(){
   gaffRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   gaffRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   gaffRotationGizmo.sensitivity = .6
-  gaffRotationGizmo.scaleRatio = .3
+  gaffRotationGizmo.scaleRatio = .25
   gaffRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let z = (gaff.rotationQuaternion ? gaff.rotationQuaternion.z : gaff.rotation.z) * (180/Math.PI)
     //console.log((gaff.rotationQuaternion ? gaff.rotationQuaternion.z : 0)* (180/Math.PI), gaff.rotation.z)
@@ -580,19 +585,18 @@ function rotateGizmo(currentAngle: number, maxAngle: number, quaternionRot?: BAB
 }
 
 
-//const MAX_ACCELERATION = 1;
-const acceleration = .2;
-const MAX_VELOCITY = 2;
-let velocity: number = 1;
+const acceleration = .02;
+const MAX_VELOCITY = .2;
+let velocity: number = 0;
 const rotSpeed: number = 5 * (Math.PI/180); //5 deg
-let moveNS: number = 0
+//let moveNS: number = 0
 function moveBoat(){
-  if (!gameLoaded || !joinedWithName) { return; }
+  if (!joinedWithName) { return; }
 
   if (actionParams.length == 0) { return; }
   console.log("move boat")
 
-  moveNS = .5
+  //moveNS = .5
   const inputWE = actionParams[0]
   const inputNS = actionParams[1]
   //console.log(actionParams)
@@ -611,42 +615,42 @@ function moveBoat(){
     ))))
   }
 
-  if (inputNS != ""){
-    //if NS input, move boat forward/backward
-    // "Every frame, you add your acceleration value (PLAYER_ACCELERATION) to the player's velocity until it reaches a maximum."
-
-    if (inputNS == "N"){
-      if (velocity < 0)
-        velocity = .2
-      accelerate(false);
-      moveNS = moveNS + velocity//-1 * (velocity + acceleration)
+  //if NS input, move boat forward/backward
+  // "Every frame, you add your acceleration value (PLAYER_ACCELERATION) to the player's velocity until it reaches a maximum."
+  if (inputNS == "N"){
+    // if (velocity < 0)
+    //   velocity = .2
+    //accelerate(false);
+    //moveNS = moveNS + velocity//-1 * (velocity + acceleration)
+    if (velocity < MAX_VELOCITY){
+      velocity += acceleration
     }
-    else if (inputNS == "S"){
-      if (velocity > 0)
-        velocity = -.2
-      accelerate(true);
-      moveNS = (-1 * moveNS) + velocity// + acceleration
-    }
-    //console.log("pos " + boatObj.position)
-    boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0))//new BABYLON.Vector3(moveNS, 0, 0))
-
-    //console.log("new pos " + boatObj.position)
-    //camera.position = new BABYLON.Vector3(boatObj.position.x, camera.position.y, boatObj.position.z - 3)
-    //if boat angle > 180, shift camera down, if angle < 180, shift camera up; center boat on screen?
-    
+    actionParams[1] = ""
   }
+  else if (inputNS == "S"){
+    // if (velocity > 0)
+    //   velocity = -.2
+    //moveNS = (-1 * moveNS) + velocity// + acceleration
+    if (velocity > 0){
+      velocity -= acceleration
+    }
+    //decelerate(false);
+    actionParams[1] = ""
+  }
+
   //if WE input, turn on rudder
-  if (inputWE != ""){
-    velocity = 0
-    if (inputWE == "W"){
-      boatObj.addRotation(0, -1 * rotSpeed, 0)
-      //tiller.addRotation(0, -15 * (Math.PI/180), 0)
-    }
-    else if (inputWE == "E"){
-      boatObj.addRotation(0, rotSpeed, 0)
-      //tiller.addRotation(0, 15 * (Math.PI/180), 0)
-    }
+  if (inputWE == "W"){
+    boatObj.addRotation(0, -1 * rotSpeed, 0)
+    //tiller.addRotation(0, -15 * (Math.PI/180), 0)
+    actionParams[0] = ""
   }
+  else if (inputWE == "E"){
+    boatObj.addRotation(0, rotSpeed, 0)
+    //tiller.addRotation(0, 15 * (Math.PI/180), 0)
+    actionParams[0] = ""
+  }
+  
+  //boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0))
 }
 
 function accelerate(reversing: boolean){
@@ -690,30 +694,33 @@ function addKeyListeners(){
     const key = event.key
     //console.log(key)
     //console.log(gameLoaded, joinedWithName)
-    if (gameLoaded && joinedWithName){
-      actionParams = [];
-      pressedMoveKeys.splice(0)
-      if(key == "a" || pressedMoveKeys.includes(key)){
+    if (joinedWithName){
+      //actionParams = [];
+      //pressedMoveKeys.splice(0)
+      if(key == "a"){
         actionParams[0] = "W";
       }
-      else if(key == "d" || pressedMoveKeys.includes(key)){
+      else if(key == "d"){
         actionParams[0] = "E";
       }
       else{
         actionParams[0] = "";
       }
-
-      if(key == "w" || pressedMoveKeys.includes(key)){
+      if(key === "w"){
+        console.log(key, pressedMoveKeys)
         actionParams[1] = "N";
       }
-      else if(key == "s" || pressedMoveKeys.includes(key)){
+      else if(key == "s"){
         actionParams[1] = "S";
       }
       else{
         actionParams[1] = "";
       }
       currentAction = moveBoat
-      pressedMoveKeys.push(key)
+      if (!pressedMoveKeys.includes(key)){
+        pressedMoveKeys.push(key)
+      }
+      //console.log(actionParams, pressedMoveKeys)
 
       
       if (key == "ArrowLeft"){
@@ -770,24 +777,18 @@ async function queueClientAction(){
     delta = (<BABYLON.Engine> engine).getDeltaTime()/1000
     //console.log("tick ", currentAction)
     let moveKeysPressed: boolean = false;
-    //console.log("velocity " + velocity + " action params " + actionParams)
+    velocity = Math.round(velocity*1000)/1000
     if (velocity != 0){
       if (pressedMoveKeys.includes("w") || pressedMoveKeys.includes("s") || pressedMoveKeys.includes("d") || pressedMoveKeys.includes("a")){//not moving, decelerate
         moveKeysPressed = true
         //console.log("move keys pressed " + pressedMoveKeys)
       }
-
-      if (!moveKeysPressed){
-        console.log("decelerate")
-        decelerate((velocity < 0) ? true:false);
-        boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0))
-        //camera.position = new BABYLON.Vector3(boatObj.position.x, camera.position.y, boatObj.position.z - 3)
-      }
     }
-
+    console.log(velocity)
     await currentAction()
-    currentAction = () => {};
-    actionParams = [];
+    boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0))
+    //currentAction = () => {};
+    //actionParams = [];
 
     if (shipView){
       shipCamera.parent = <BABYLON.TransformNode> scene.getNodeByName("camera-pivot")

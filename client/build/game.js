@@ -249,6 +249,7 @@ var oceanCamera;
 var shipCamera;
 var tiller;
 var mast;
+var gaff;
 async function loadBoatMesh(scene, pos) {
   await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
   console.log(scene);
@@ -261,6 +262,7 @@ async function loadBoatMesh(scene, pos) {
   boatMesh = scene.getNodeByName("BOAT");
   mast = scene.getNodeByName("mast");
   tiller = scene.getNodeByName("tiller");
+  gaff = scene.getMeshByName("gaff");
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
@@ -340,11 +342,15 @@ function changeShipView() {
     scene.activeCamera = oceanCamera;
     tillerRotationGizmo.attachedMesh = null;
     mastRotationGizmo.attachedMesh = null;
+    gaffMovementGizmo.attachedMesh = null;
+    gaffRotationGizmo.attachedMesh = null;
     shipView = false;
   } else {
     scene.activeCamera = shipCamera;
     tillerRotationGizmo.attachedMesh = tiller;
     mastRotationGizmo.attachedMesh = mast;
+    gaffMovementGizmo.attachedMesh = gaff;
+    gaffRotationGizmo.attachedMesh = gaff;
     shipView = true;
   }
 }
@@ -353,7 +359,6 @@ var mastRotationGizmo;
 var gaffMovementGizmo;
 var gaffRotationGizmo;
 function setupGizmos() {
-  const gaff = scene.getMeshByName("gaff");
   var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
   tiller.behaviors.splice(0);
   mast.behaviors.splice(0);
@@ -390,12 +395,12 @@ function setupGizmos() {
   mastRotationGizmo.attachedMesh = mast;
   mastRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   mastRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-  mastRotationGizmo.scaleRatio = 0.3;
+  mastRotationGizmo.scaleRatio = 0.25;
   mastRotationGizmo.sensitivity = 0.6;
   mastRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let y = (mast.rotationQuaternion ? mast.rotationQuaternion.y : mast.rotation.y) * (180 / Math.PI);
     mast.scaling = new BABYLON.Vector3(Math.round(mast.scaling.x * 100) / 100, Math.round(mast.scaling.y * 100) / 100, Math.round(mast.scaling.z * 100) / 100);
-    const gizmoResult = rotateGizmo(y, 25, mast.rotationQuaternion ? mast.rotationQuaternion : undefined);
+    const gizmoResult = rotateGizmo(y, 35, mast.rotationQuaternion ? mast.rotationQuaternion : undefined);
     if (gizmoResult.boundsHit) {
       mastRotationGizmo.dragBehavior.releaseDrag();
     }
@@ -407,12 +412,13 @@ function setupGizmos() {
         mast.rotation.y = gizmoResult.finalAngle;
         break;
     }
+    console.log(y);
   });
   gaffMovementGizmo = new BABYLON.AxisDragGizmo(new BABYLON.Vector3(0, 1, 0), BABYLON.Color3.Red(), utilLayer, undefined, 3, BABYLON.Color3.Teal());
   gaffMovementGizmo.updateGizmoRotationToMatchAttachedMesh = false;
   gaffMovementGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   gaffMovementGizmo.attachedMesh = gaff;
-  gaffMovementGizmo.scaleRatio = 0.4;
+  gaffMovementGizmo.scaleRatio = 0.35;
   gaffMovementGizmo.dragBehavior.onDragObservable.add((e) => {
     const y = gaff.position.y;
     const minY = -3.7;
@@ -432,7 +438,7 @@ function setupGizmos() {
   gaffRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   gaffRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   gaffRotationGizmo.sensitivity = 0.6;
-  gaffRotationGizmo.scaleRatio = 0.3;
+  gaffRotationGizmo.scaleRatio = 0.25;
   gaffRotationGizmo.dragBehavior.onDragObservable.add((e) => {
     let z = (gaff.rotationQuaternion ? gaff.rotationQuaternion.z : gaff.rotation.z) * (180 / Math.PI);
     gaff.scaling = new BABYLON.Vector3(Math.round(gaff.scaling.x * 100) / 100, Math.round(gaff.scaling.y * 100) / 100, Math.round(gaff.scaling.z * 100) / 100);
@@ -480,97 +486,66 @@ function rotateGizmo(currentAngle, maxAngle, quaternionRot, minAngle) {
   }
   return res;
 }
-var acceleration = 0.2;
-var MAX_VELOCITY = 2;
-var velocity = 1;
+var acceleration = 0.02;
+var MAX_VELOCITY = 0.2;
+var velocity = 0;
 var rotSpeed = 5 * (Math.PI / 180);
-var moveNS = 0;
 function moveBoat() {
-  if (!gameLoaded || !joinedWithName) {
+  if (!joinedWithName) {
     return;
   }
   if (actionParams.length == 0) {
     return;
   }
   console.log("move boat");
-  moveNS = 0.5;
   const inputWE = actionParams[0];
   const inputNS = actionParams[1];
   if (inputNS != "" || inputWE != "") {
     ws.send(JSON.stringify(new ClientPacket(2 /* PLAYER_POSITION_UPDATE */, new PlayerLocation([boatObj.absolutePosition.x, boatObj.absolutePosition.z], boatObj.rotation.y, velocity))));
   }
-  if (inputNS != "") {
-    if (inputNS == "N") {
-      if (velocity < 0)
-        velocity = 0.2;
-      accelerate(false);
-      moveNS = moveNS + velocity;
-    } else if (inputNS == "S") {
-      if (velocity > 0)
-        velocity = -0.2;
-      accelerate(true);
-      moveNS = -1 * moveNS + velocity;
-    }
-    boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0));
-  }
-  if (inputWE != "") {
-    velocity = 0;
-    if (inputWE == "W") {
-      boatObj.addRotation(0, -1 * rotSpeed, 0);
-    } else if (inputWE == "E") {
-      boatObj.addRotation(0, rotSpeed, 0);
-    }
-  }
-}
-function accelerate(reversing) {
-  if (!reversing) {
-    if (velocity < MAX_VELOCITY)
+  if (inputNS == "N") {
+    if (velocity < MAX_VELOCITY) {
       velocity += acceleration;
-    if (velocity > MAX_VELOCITY)
-      velocity = MAX_VELOCITY;
-  } else {
-    if (velocity > MAX_VELOCITY * -1 && velocity <= 0)
+    }
+    actionParams[1] = "";
+  } else if (inputNS == "S") {
+    if (velocity > 0) {
       velocity -= acceleration;
-    if (velocity < MAX_VELOCITY * -1)
-      velocity = MAX_VELOCITY * -1;
+    }
+    actionParams[1] = "";
   }
-}
-function decelerate(reversing) {
-  if (!reversing) {
-    if (velocity < 0)
-      velocity += acceleration;
-    if (velocity > 0)
-      velocity = 0;
-  } else {
-    if (velocity > 0)
-      velocity -= acceleration;
-    if (velocity < 0)
-      velocity = 0;
+  if (inputWE == "W") {
+    boatObj.addRotation(0, -1 * rotSpeed, 0);
+    actionParams[0] = "";
+  } else if (inputWE == "E") {
+    boatObj.addRotation(0, rotSpeed, 0);
+    actionParams[0] = "";
   }
 }
 var pressedMoveKeys = [];
 function addKeyListeners() {
   canvas.addEventListener("keydown", (event) => {
     const key = event.key;
-    if (gameLoaded && joinedWithName) {
-      actionParams = [];
-      pressedMoveKeys.splice(0);
-      if (key == "a" || pressedMoveKeys.includes(key)) {
+    if (joinedWithName) {
+      if (key == "a") {
         actionParams[0] = "W";
-      } else if (key == "d" || pressedMoveKeys.includes(key)) {
+      } else if (key == "d") {
         actionParams[0] = "E";
       } else {
         actionParams[0] = "";
       }
-      if (key == "w" || pressedMoveKeys.includes(key)) {
+      if (key === "w") {
+        console.log(key, pressedMoveKeys);
         actionParams[1] = "N";
-      } else if (key == "s" || pressedMoveKeys.includes(key)) {
+      } else if (key == "s") {
         actionParams[1] = "S";
       } else {
         actionParams[1] = "";
       }
       currentAction = moveBoat;
-      pressedMoveKeys.push(key);
+      if (!pressedMoveKeys.includes(key)) {
+        pressedMoveKeys.push(key);
+      }
       if (key == "ArrowLeft") {
         shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z);
       } else if (key == "ArrowRight") {
@@ -613,19 +588,15 @@ async function queueClientAction() {
   if (gameLoaded) {
     delta = engine.getDeltaTime() / 1000;
     let moveKeysPressed = false;
+    velocity = Math.round(velocity * 1000) / 1000;
     if (velocity != 0) {
       if (pressedMoveKeys.includes("w") || pressedMoveKeys.includes("s") || pressedMoveKeys.includes("d") || pressedMoveKeys.includes("a")) {
         moveKeysPressed = true;
       }
-      if (!moveKeysPressed) {
-        console.log("decelerate");
-        decelerate(velocity < 0 ? true : false);
-        boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0));
-      }
     }
+    console.log(velocity);
     await currentAction();
-    currentAction = () => {};
-    actionParams = [];
+    boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0));
     if (shipView) {
       shipCamera.parent = scene.getNodeByName("camera-pivot");
       shipCamera.position = shipCamera.parent.position;
