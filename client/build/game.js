@@ -59,8 +59,8 @@ function setJoinedWithName(joinName) {
   name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine, canvas) {
-  var scene = new BABYLON.Scene(engine);
+function createWaterScene(engine2, canvas2) {
+  var scene = new BABYLON.Scene(engine2);
   camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -266,11 +266,11 @@ async function loadBoatMesh(scene, pos) {
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
-  oceanCamera = scene.cameras.find((camera) => {
-    return camera.name == "OceanCamera";
+  oceanCamera = scene.cameras.find((camera2) => {
+    return camera2.name == "OceanCamera";
   });
-  shipCamera = scene.cameras.find((camera) => {
-    return camera.name == "ShipCamera";
+  shipCamera = scene.cameras.find((camera2) => {
+    return camera2.name == "ShipCamera";
   });
   shipCamera.parent = scene.getNodeByName("camera-pivot");
   shipCamera.target = scene.getNodeByName("camera-target").position;
@@ -607,9 +607,9 @@ async function queueClientAction() {
   }
 }
 export {
-  addOtherBoat,
-  displayInboundChat,
-  gameLoaded,
+  setJoinedWithName,
   linkWsToGame,
-  setJoinedWithName
+  gameLoaded,
+  displayInboundChat,
+  addOtherBoat
 };

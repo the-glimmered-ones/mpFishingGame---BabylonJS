@@ -96,17 +96,21 @@
             <!--<canvas class="gameSize" id="gameArea"></canvas>-->
             <iframe class="gameSize" id="gameFrame" title="Ship Game"></iframe><!--src="water.html" src="game.html"-->
         </div>
-    <script type="module">var __esm = (fn, res, err) => () => {
-  if (fn)
-    try {
-      res = fn(fn = 0);
-    } catch (e) {
-      err = [e];
-    }
-  if (err)
-    throw err[0];
-  return res;
+    <script type="module">var __defProp = Object.defineProperty;
+var __returnValue = (v) => v;
+function __exportSetter(name, newValue) {
+  this[name] = __returnValue.bind(null, newValue);
+}
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: __exportSetter.bind(all, name)
+    });
 };
+var __esm = (fn, res) => () => (fn && (res = fn(fn = 0)), res);
 
 // shared/Consts.ts
 class PlayerLocation {
@@ -143,6 +147,14 @@ class ClientPacket {
 var init_PacketTypes = () => {};
 
 // client/src/game.ts
+var exports_game = {};
+__export(exports_game, {
+  setJoinedWithName: () => setJoinedWithName,
+  linkWsToGame: () => linkWsToGame,
+  gameLoaded: () => gameLoaded,
+  displayInboundChat: () => displayInboundChat,
+  addOtherBoat: () => addOtherBoat
+});
 function linkWsToGame(frame, webSocket) {
   ws.close();
   ws = webSocket;
@@ -158,8 +170,8 @@ function setJoinedWithName(joinName) {
   name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine, canvas) {
-  var scene = new BABYLON.Scene(engine);
+function createWaterScene(engine2, canvas2) {
+  var scene = new BABYLON.Scene(engine2);
   camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -358,11 +370,11 @@ async function loadBoatMesh(scene, pos) {
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
-  oceanCamera = scene.cameras.find((camera) => {
-    return camera.name == "OceanCamera";
+  oceanCamera = scene.cameras.find((camera2) => {
+    return camera2.name == "OceanCamera";
   });
-  shipCamera = scene.cameras.find((camera) => {
-    return camera.name == "ShipCamera";
+  shipCamera = scene.cameras.find((camera2) => {
+    return camera2.name == "ShipCamera";
   });
   shipCamera.parent = scene.getNodeByName("camera-pivot");
   shipCamera.target = scene.getNodeByName("camera-target").position;
@@ -703,7 +715,7 @@ init_Consts();
 init_PacketTypes();
 var ws2 = new WebSocket("ws://localhost:2323");
 var gameFrameWindow;
-var gameModule = await Promise.resolve().then(() => (init_game(), {}));
+var gameModule = await Promise.resolve().then(() => (init_game(), exports_game));
 addEventListener("load", async () => {
   const gameFrame = document.getElementById("gameFrame");
   gameFrameWindow = gameFrame.contentWindow;
@@ -729,7 +741,7 @@ addEventListener("load", async () => {
         </body>
     </html>`;
   (async function linkGameToIFrame() {
-    linkWsToGame(gameFrameWindow, ws2);
+    gameModule.linkWsToGame(gameFrameWindow, ws2);
   }).call(gameFrame.contentDocument);
 });
 var nameInput = document.getElementById("nameInput");
@@ -812,8 +824,8 @@ ws2.addEventListener("message", (event) => {
       break;
     case 2 /* JOIN_ACCEPTED */:
       if (gameModule && gameFrameWindow) {
-        if (typeof setJoinedWithName === "function") {
-          setJoinedWithName.call(gameFrameWindow, name2);
+        if (typeof gameModule.setJoinedWithName === "function") {
+          gameModule.setJoinedWithName.call(gameFrameWindow, name2);
         }
       }
       nameWarning.style.visibility = "hidden";
@@ -826,12 +838,12 @@ ws2.addEventListener("message", (event) => {
       if (gameModule && gameFrameWindow) {
         for (let player of playerPositions) {
           if (player.name != name2)
-            addOtherBoat.call(gameFrameWindow, player);
+            gameModule.addOtherBoat.call(gameFrameWindow, player);
         }
       }
       break;
     case 5 /* INCOMING_CHAT_MESSAGE */:
-      displayInboundChat(msg.data);
+      gameModule.displayInboundChat(msg.data);
       break;
     default:
       console.log("fail");
