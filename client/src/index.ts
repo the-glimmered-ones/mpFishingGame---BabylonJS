@@ -1,10 +1,7 @@
 import { ChatMessage, GlobalClientLocation, ShipTypes } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
-//import { createNewBoat, setPlayerHasJoined } from "@src/shared";
-//import * as Game from "https://the-glimmered-ones.github.io/multiplayer-boat-game/game.ts";
-//Game.setJoinedWithName()
 
-export const ws: WebSocket = new WebSocket("ws://localhost:2323")//"ws://mpfishinggame.sbthompson429.workers.dev:2323")//"https://mpfishinggame.sbthompson429.workers.dev/")
+export const ws: WebSocket = new WebSocket("ws://localhost:2323")
 
 function getWebsocket(){
     return ws;
@@ -40,14 +37,11 @@ addEventListener("load", async () => {
             <canvas id=renderCanvas></canvas>
             
         </body>
-    </html>`;//<script src="${import("./game.js")}" type=module></script> //loads in index again
-    //module doesn't accept ts >:(
-    //only type module accepts imports/exports
-    (async function linkGameToIFrame() { // i need to run this code under game frame, load has already completed
-        //console.log(self)
+    </html>`;
+
+    (async function linkGameToIFrame() {
         gameModule.linkWsToGame(gameFrameWindow, ws)
     }).call(gameFrame.contentDocument)
-    
 })
 
 
@@ -112,8 +106,12 @@ nameInput.addEventListener("keyup", (event) => {
 function joinGame(){
     name = nameInput.value
     //console.log(name + " " + ship)
-    if(ship){
-        ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.JOIN_WITH_NAME, name)))
+    if(ship != ShipTypes.NONE){
+        ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.JOIN_WITH_NAME, 
+            {
+                "name": name,
+                "type": ship
+             })))
         //console.log("join request sent")
     }
 }
@@ -149,17 +147,21 @@ ws.addEventListener("message", (event) => {
             chooseShipOverlay.style.visibility = "hidden"
             break
         case ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS:
-            console.log("add boat")
+            //console.log("add boat")
              const playerPositions: GlobalClientLocation[] = msg.data
              if (gameModule && gameFrameWindow){
                 for (let player of playerPositions){
                     if (player.name != name)
+                        //console.log("other boat added")
                         gameModule.addOtherBoat.call(gameFrameWindow, player)
                 }
             }
             break
         case ServerPacketTypes.INCOMING_CHAT_MESSAGE:
             gameModule.displayInboundChat(<ChatMessage>msg.data)
+            break
+        case ServerPacketTypes.PLAYER_LEFT_EXPERIENCE:
+            gameModule.removePlayerShipOnLeave(msg.data);
             break
         default:
             console.log("fail")

@@ -1,14 +1,5 @@
-// import * as BABYLON from "babylonjs";
-// import { WaterMaterial } from "babylonjs-materials"; 
-// import "babylonjs-materials";
-// import "babylonjs-loaders";
-// import "babylonjs-post-process";
-// import "babylonjs-serializers";
-// import "babylonjs-gui";
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
-import { GizmoCoordinatesMode } from "babylonjs";
-//import { ws } from "@src/shared";
 var ws: WebSocket = new WebSocket("");
 var iframe: Window = window.self;
 //fixed loading times by hosting this file online and importing it when needed
@@ -49,6 +40,7 @@ export function setJoinedWithName(joinName: string){
 
 function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var scene: BABYLON.Scene = new BABYLON.Scene(engine);
+    loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
     //console.log("scene created")
     //var camera = new BABYLON.ArcRotateCamera("Camera", 3 * Math.PI / 2, 8 * Math.PI / 45, 100, BABYLON.Vector3.Zero(), scene);
     camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0,0,0), scene);
@@ -88,8 +80,6 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     water.addToRenderList(skybox);
     water.addToRenderList(ground);
     waterMesh.material = water;
-
-    loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
 
     // BABYLON.Effect.ShadersStore["customFragmentShader"] = `
     // #ifdef GL_ES
@@ -290,6 +280,8 @@ var gaff: BABYLON.AbstractMesh;
 async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     //sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
     await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene)
+    boatMesh = <BABYLON.Mesh> scene.getNodeByName("BOAT")
+    
     console.log(scene)
     var woodMat: BABYLON.StandardMaterial;
     woodMat = new BABYLON.StandardMaterial("boatMat")
@@ -299,7 +291,6 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     lightWoodMat = new BABYLON.StandardMaterial("boatMat")
     lightWoodMat.diffuseColor = new BABYLON.Color3(214/255, 151/255, 92/255);
 
-    boatMesh = <BABYLON.Mesh> scene.getNodeByName("BOAT")
     mast = <BABYLON.AbstractMesh> scene.getNodeByName("mast")
     tiller = <BABYLON.AbstractMesh> scene.getNodeByName("tiller")
     gaff = <BABYLON.AbstractMesh> scene.getMeshByName("gaff")
@@ -309,6 +300,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
 
     oceanCamera = <BABYLON.FreeCamera> scene.cameras.find((camera) => { return camera.name == "OceanCamera"})
     shipCamera = <BABYLON.FreeCamera> scene.cameras.find((camera) => { return camera.name == "ShipCamera"})
+    oceanCamera.parent = (<BABYLON.TransformNode>scene.getNodeByName("ocean-camera-pivot"))
     shipCamera.parent = (<BABYLON.TransformNode>scene.getNodeByName("camera-pivot"))
     //shipCamera.lockedTarget = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "camera-target"})
     shipCamera.target = (<BABYLON.TransformNode>scene.getNodeByName("camera-target")).position
@@ -333,7 +325,6 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     }
     // boatMesh.addChild(mast)
     boatMesh.position = pos
-    boatObj = boatMesh
 
     if (boatMesh){
       addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
@@ -343,14 +334,15 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
 
 function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector3, rotation: BABYLON.Vector3, cameras?: BABYLON.FreeCamera[]){
   boatRoot = new BABYLON.TransformNode("boatTransform");
+  boatObj = mesh
   console.log(mesh)
   if (cameras){
-    oceanCamera.parent = boatRoot
+    //oceanCamera.parent = boatRoot
     //shipCamera.parent = boatRoot
     console.log("cameras added")
-    oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3))
-    oceanCamera.target = new BABYLON.Vector3(0, -10, -3)
-    oceanCamera.fov = 1.1
+    oceanCamera.position = (<BABYLON.TransformNode>oceanCamera.parent).position
+    oceanCamera.target = (<BABYLON.TransformNode> scene.getNodeByName("camera-target")).position
+    oceanCamera.fov = .386
     //shipCamera.position = new BABYLON.Vector3(-5, 35, -40)
     // shipCamera.position = boatObj.position.add(new BABYLON.Vector3(-8, 35, -40))
     // shipCamera.setTarget(new BABYLON.Vector3(boatObj.absolutePosition.x, 3, boatObj.absolutePosition.z))
@@ -361,23 +353,53 @@ function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector
   boatObj.parent = boatRoot
   boatRoot.position = pos
   //boatRoot.scaling = scale
-  boatObj.rotation = rotation  
-  
-  // if (camera){
-  //   camera.position = new BABYLON.Vector3(0, 30, -3)
-  //   camera.setTarget(new BABYLON.Vector3(0, -10, -3))
-  //   camera.fov = 1.1
-  //   camera.parent = boatRoot;
-  //   //camera.attachControl();
-  //   //camera.cameraAcceleration = 1;
-  //   //camera.maxCameraSpeed = 10;
-  // }
-
-  //console.log(boatRoot) 
+  boatObj.rotation = rotation
+  return boatRoot;
 }
 
+class LoadedPlayer {
+  name
+  mesh
+  constructor(name: string, mesh: BABYLON.InstancedMesh){
+    this.name = name
+    this.mesh = mesh
+  }
+}
+const loadedPlayers: LoadedPlayer[] = []
 export function addOtherBoat(player: GlobalClientLocation){
-  addBoat(boatMesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0))
+  if (!boatMesh) {return;}
+  if (player.name == name) {return;}
+  if (!loadedPlayers.find(({name}) => {return player.name == name})){
+    const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${player.name}BoatInstance`)//TODO instance of different mesh depending on ship type
+    mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1])
+    mesh.rotation = new BABYLON.Vector3(0, player.angle, 0)
+    mesh.parent = null
+    scene.addMesh(mesh)
+    //const transform = addBoat(mesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0))
+    loadedPlayers.push(new LoadedPlayer(player.name, mesh))
+  }
+  else{
+    updateExistingPlayerLocation(player);
+  }
+}
+
+function updateExistingPlayerLocation(data: GlobalClientLocation){
+  const player = loadedPlayers.find(({name}) => {return data.name == name})
+  console.log(loadedPlayers)
+  if (player?.mesh){
+    player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
+    player.mesh.rotation = new BABYLON.Vector3(0,data.angle,0)
+    console.log(`${player.name} moved to ${player.mesh.position}`)
+  }
+}
+
+export function removePlayerShipOnLeave(name: string){
+  let result = loadedPlayers.find((player) => {return name == player.name})
+  if (result){
+    scene.removeMesh(result.mesh, true)
+    result.mesh.dispose()
+    loadedPlayers.splice(loadedPlayers.indexOf(result),1)
+  }
 }
 
 //https://stackoverflow.com/questions/251420/invoking-javascript-code-in-an-iframe-from-the-parent-page
@@ -400,7 +422,7 @@ async function startGame(){//parent.getWebsocket()){
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
-    //scene.debugLayer.show()
+    scene.debugLayer.show()
     joinedWithName = false
     console.log("scene drawn")
     addKeyListeners()
@@ -449,7 +471,7 @@ function setupGizmos(){
   gaff.addBehavior(dragbehavior)
   
   tillerRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0,1,0), BABYLON.Color3.Yellow(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal())
-  tillerRotationGizmo.attachedMesh = tiller
+  tillerRotationGizmo.attachedMesh = null
   tillerRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   tillerRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   tillerRotationGizmo.scaleRatio = .3
@@ -474,7 +496,7 @@ function setupGizmos(){
   });
 
   mastRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0,1,0), BABYLON.Color3.Yellow(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal())
-  mastRotationGizmo.attachedMesh = mast
+  mastRotationGizmo.attachedMesh = null
   mastRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   mastRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   mastRotationGizmo.scaleRatio = .25
@@ -500,7 +522,7 @@ function setupGizmos(){
   gaffMovementGizmo = new BABYLON.AxisDragGizmo(new BABYLON.Vector3(0,1,0), BABYLON.Color3.Red(), utilLayer, undefined, 3, BABYLON.Color3.Teal())
   gaffMovementGizmo.updateGizmoRotationToMatchAttachedMesh = false;
   gaffMovementGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-  gaffMovementGizmo.attachedMesh = gaff
+  gaffMovementGizmo.attachedMesh = null
   gaffMovementGizmo.scaleRatio = .35
   gaffMovementGizmo.dragBehavior.onDragObservable.add((e) => {
     const y = gaff.position.y
@@ -520,7 +542,7 @@ function setupGizmos(){
   });
 
   gaffRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0,0,1), BABYLON.Color3.Green(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal())
-  gaffRotationGizmo.attachedMesh = gaff
+  gaffRotationGizmo.attachedMesh = null
   gaffRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   gaffRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   gaffRotationGizmo.sensitivity = .5
@@ -594,7 +616,7 @@ function moveBoat(){
   if (!joinedWithName) { return; }
 
   if (actionParams.length == 0) { return; }
-  console.log("move boat")
+  //console.log("move boat")
 
   //moveNS = .5
   const inputWE = actionParams[0]
@@ -603,38 +625,18 @@ function moveBoat(){
 
   //TODO: acceleration / lerp with delta for smoother movement
 
-  if (inputNS != "" || inputWE != ""){
-    //console.log("hasJoinedWithName " + joinedWithName)
-    ws.send(
-      JSON.stringify(
-        new ClientPacket(ClientPacketTypes.PLAYER_POSITION_UPDATE, 
-        new PlayerLocation(
-          [boatObj.absolutePosition.x, boatObj.absolutePosition.z],
-          boatObj.rotation.y,
-          velocity
-    ))))
-  }
-
   //if NS input, move boat forward/backward
   // "Every frame, you add your acceleration value (PLAYER_ACCELERATION) to the player's velocity until it reaches a maximum."
   if (inputNS == "N"){
-    // if (velocity < 0)
-    //   velocity = .2
-    //accelerate(false);
-    //moveNS = moveNS + velocity//-1 * (velocity + acceleration)
     if (velocity < MAX_VELOCITY){
       velocity += acceleration
     }
     actionParams[1] = ""
   }
   else if (inputNS == "S"){
-    // if (velocity > 0)
-    //   velocity = -.2
-    //moveNS = (-1 * moveNS) + velocity// + acceleration
     if (velocity > 0){
       velocity -= acceleration
     }
-    //decelerate(false);
     actionParams[1] = ""
   }
 
@@ -649,40 +651,6 @@ function moveBoat(){
     //tiller.addRotation(0, 15 * (Math.PI/180), 0)
     actionParams[0] = ""
   }
-  
-  //boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0))
-}
-
-function accelerate(reversing: boolean){
-  if (!reversing){
-    if (velocity < MAX_VELOCITY)
-      velocity += acceleration;
-    if (velocity > MAX_VELOCITY)
-      velocity = MAX_VELOCITY;
-    //console.log("reversing velocity " + velocity)
-  }
-  else{
-    if (velocity > (MAX_VELOCITY * -1) && velocity <= 0) // if > -3
-      velocity -= acceleration; //
-    if (velocity < (MAX_VELOCITY * -1))
-      velocity = (MAX_VELOCITY * -1);
-  }
-}
-
-function decelerate(reversing: boolean){
-  if (!reversing){
-    if (velocity < 0)
-      velocity += acceleration;
-    if (velocity > 0)
-      velocity = 0;
-  }
-  else{
-    if (velocity > 0)
-      velocity -= acceleration;
-    if (velocity < 0)
-      velocity = 0;
-  }
-  //boatObj.locallyTranslate(new BABYLON.Vector3(moveNS, 0, 0))
 }
 
 const pressedMoveKeys: Array<string> = []
@@ -692,11 +660,8 @@ function addKeyListeners(){
   //w/up = go forward, left/right = turn, down = slowly back up
   //change view = space, attack = shift, map = tab
     const key = event.key
-    //console.log(key)
     //console.log(gameLoaded, joinedWithName)
     if (joinedWithName){
-      //actionParams = [];
-      //pressedMoveKeys.splice(0)
       if(key == "a"){
         actionParams[0] = "W";
       }
@@ -707,7 +672,6 @@ function addKeyListeners(){
         actionParams[0] = "";
       }
       if(key === "w"){
-        console.log(key, pressedMoveKeys)
         actionParams[1] = "N";
       }
       else if(key == "s"){
@@ -722,7 +686,7 @@ function addKeyListeners(){
       }
       //console.log(actionParams, pressedMoveKeys)
 
-      
+      let oceanPivot = <BABYLON.TransformNode> scene.getNodeByName("ocean-camera-pivot")
       if (key == "ArrowLeft"){
         shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z)
       }
@@ -730,16 +694,16 @@ function addKeyListeners(){
         shipCamera.position = new BABYLON.Vector3(shipCamera.position.x + 5, shipCamera.position.y, shipCamera.position.z)
       }
       else if (key == ","){
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y, shipCamera.position.z - 5)
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y - 5, oceanPivot.position.z)
       }
       else if (key == "."){
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y, shipCamera.position.z + 5)
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y + 5, oceanPivot.position.z)
       }
       else if (key == "ArrowUp"){
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y + 5, shipCamera.position.z)
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x + 1, oceanPivot.position.y, oceanPivot.position.z)
       }
       else if (key == "ArrowDown"){
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y - 5, shipCamera.position.z)
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x - 1, oceanPivot.position.y, oceanPivot.position.z)
       }
     }
   })
@@ -784,21 +748,34 @@ async function queueClientAction(){
         //console.log("move keys pressed " + pressedMoveKeys)
       }
     }
-    console.log(velocity)
+    //console.log(velocity)
     await currentAction()
     boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0))
+
+    ws.send(
+      JSON.stringify(
+        new ClientPacket(ClientPacketTypes.PLAYER_POSITION_UPDATE, 
+        new PlayerLocation(
+          [boatObj.absolutePosition.x, boatObj.absolutePosition.z],
+          boatObj.rotation.y,
+          velocity
+    ))))
+
     //currentAction = () => {};
     //actionParams = [];
 
     if (shipView){
       shipCamera.parent = <BABYLON.TransformNode> scene.getNodeByName("camera-pivot")
-      shipCamera.position = (<BABYLON.Mesh>shipCamera.parent).position
+      shipCamera.position = (<BABYLON.TransformNode>shipCamera.parent).position
       //shipCamera.position = ((<BABYLON.Mesh>shipCamera.parent) ? (<BABYLON.Mesh>shipCamera.parent).position : boatObj.position.add(new BABYLON.Vector3(-8, 25, -40)))
       //shipCamera.setTarget(new BABYLON.Vector3(boatObj.position.x, 3, boatObj.position.z))
       shipCamera.target = (<BABYLON.TransformNode> scene.getNodeByName("camera-target")).position
     }
     else{
-      oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3))
+      //oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3))
+      oceanCamera.parent = <BABYLON.TransformNode> scene.getNodeByName("ocean-camera-pivot")
+      //oceanCamera.position = (<BABYLON.TransformNode>oceanCamera.parent).position
+      oceanCamera.target = (<BABYLON.TransformNode> scene.getNodeByName("camera-target")).position
     }
 
     updateVisibleChatHistory()

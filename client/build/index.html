@@ -93,24 +93,19 @@
                 <button id="submitNameBtn" style="margin: 0px 10px;height:50%; font-weight: bold;">Submit</button>
             </div>
         </div>
-            <!--<canvas class="gameSize" id="gameArea"></canvas>-->
-            <iframe class="gameSize" id="gameFrame" title="Ship Game"></iframe><!--src="water.html" src="game.html"-->
+            <iframe class="gameSize" id="gameFrame" title="Ship Game"></iframe>
         </div>
-    <script type="module">var __defProp = Object.defineProperty;
-var __returnValue = (v) => v;
-function __exportSetter(name, newValue) {
-  this[name] = __returnValue.bind(null, newValue);
-}
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, {
-      get: all[name],
-      enumerable: true,
-      configurable: true,
-      set: __exportSetter.bind(all, name)
-    });
+    <script type="module">var __esm = (fn, res, err) => () => {
+  if (fn)
+    try {
+      res = fn(fn = 0);
+    } catch (e) {
+      err = [e];
+    }
+  if (err)
+    throw err[0];
+  return res;
 };
-var __esm = (fn, res) => () => (fn && (res = fn(fn = 0)), res);
 
 // shared/Consts.ts
 class PlayerLocation {
@@ -147,14 +142,6 @@ class ClientPacket {
 var init_PacketTypes = () => {};
 
 // client/src/game.ts
-var exports_game = {};
-__export(exports_game, {
-  setJoinedWithName: () => setJoinedWithName,
-  linkWsToGame: () => linkWsToGame,
-  gameLoaded: () => gameLoaded,
-  displayInboundChat: () => displayInboundChat,
-  addOtherBoat: () => addOtherBoat
-});
 function linkWsToGame(frame, webSocket) {
   ws.close();
   ws = webSocket;
@@ -170,8 +157,9 @@ function setJoinedWithName(joinName) {
   name = joinName;
   setInterval(queueClientAction, 10);
 }
-function createWaterScene(engine2, canvas2) {
-  var scene = new BABYLON.Scene(engine2);
+function createWaterScene(engine, canvas) {
+  var scene = new BABYLON.Scene(engine);
+  loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
   camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -204,7 +192,6 @@ function createWaterScene(engine2, canvas2) {
   water.addToRenderList(skybox);
   water.addToRenderList(ground);
   waterMesh.material = water;
-  loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
   return scene;
 }
 function setupUI() {
@@ -356,6 +343,7 @@ function toggleMap(hideElem, showElem) {
 }
 async function loadBoatMesh(scene, pos) {
   await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
+  boatMesh = scene.getNodeByName("BOAT");
   console.log(scene);
   var woodMat;
   woodMat = new BABYLON.StandardMaterial("boatMat");
@@ -363,19 +351,19 @@ async function loadBoatMesh(scene, pos) {
   var lightWoodMat;
   lightWoodMat = new BABYLON.StandardMaterial("boatMat");
   lightWoodMat.diffuseColor = new BABYLON.Color3(214 / 255, 151 / 255, 92 / 255);
-  boatMesh = scene.getNodeByName("BOAT");
   mast = scene.getNodeByName("mast");
   tiller = scene.getNodeByName("tiller");
   gaff = scene.getMeshByName("gaff");
   boatMesh.material = woodMat;
   mast.material = woodMat;
   tiller.material = lightWoodMat;
-  oceanCamera = scene.cameras.find((camera2) => {
-    return camera2.name == "OceanCamera";
+  oceanCamera = scene.cameras.find((camera) => {
+    return camera.name == "OceanCamera";
   });
-  shipCamera = scene.cameras.find((camera2) => {
-    return camera2.name == "ShipCamera";
+  shipCamera = scene.cameras.find((camera) => {
+    return camera.name == "ShipCamera";
   });
+  oceanCamera.parent = scene.getNodeByName("ocean-camera-pivot");
   shipCamera.parent = scene.getNodeByName("camera-pivot");
   shipCamera.target = scene.getNodeByName("camera-target").position;
   camera = oceanCamera;
@@ -394,28 +382,75 @@ async function loadBoatMesh(scene, pos) {
     }
   }
   boatMesh.position = pos;
-  boatObj = boatMesh;
   if (boatMesh) {
     addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
   }
 }
 function addBoat(mesh, pos, scale, rotation, cameras) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
+  boatObj = mesh;
   console.log(mesh);
   if (cameras) {
-    oceanCamera.parent = boatRoot;
     console.log("cameras added");
-    oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3));
-    oceanCamera.target = new BABYLON.Vector3(0, -10, -3);
-    oceanCamera.fov = 1.1;
+    oceanCamera.position = oceanCamera.parent.position;
+    oceanCamera.target = scene.getNodeByName("camera-target").position;
+    oceanCamera.fov = 0.386;
     scene.activeCamera = oceanCamera;
   }
   boatObj.parent = boatRoot;
   boatRoot.position = pos;
   boatObj.rotation = rotation;
+  return boatRoot;
+}
+
+class LoadedPlayer {
+  name;
+  mesh;
+  constructor(name, mesh) {
+    this.name = name;
+    this.mesh = mesh;
+  }
 }
 function addOtherBoat(player) {
-  addBoat(boatMesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0));
+  if (!boatMesh) {
+    return;
+  }
+  if (player.name == name) {
+    return;
+  }
+  if (!loadedPlayers.find(({ name }) => {
+    return player.name == name;
+  })) {
+    const mesh = boatMesh.createInstance(`${player.name}BoatInstance`);
+    mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]);
+    mesh.rotation = new BABYLON.Vector3(0, player.angle, 0);
+    mesh.parent = null;
+    scene.addMesh(mesh);
+    loadedPlayers.push(new LoadedPlayer(player.name, mesh));
+  } else {
+    updateExistingPlayerLocation(player);
+  }
+}
+function updateExistingPlayerLocation(data) {
+  const player = loadedPlayers.find(({ name }) => {
+    return data.name == name;
+  });
+  console.log(loadedPlayers);
+  if (player?.mesh) {
+    player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1]);
+    player.mesh.rotation = new BABYLON.Vector3(0, data.angle, 0);
+    console.log(`${player.name} moved to ${player.mesh.position}`);
+  }
+}
+function removePlayerShipOnLeave(name) {
+  let result = loadedPlayers.find((player) => {
+    return name == player.name;
+  });
+  if (result) {
+    scene.removeMesh(result.mesh, true);
+    result.mesh.dispose();
+    loadedPlayers.splice(loadedPlayers.indexOf(result), 1);
+  }
 }
 async function startGame() {
   ws.addEventListener("open", async () => {
@@ -432,6 +467,7 @@ async function startGame() {
         engine.resize();
       }
     });
+    scene.debugLayer.show();
     joinedWithName = false;
     console.log("scene drawn");
     addKeyListeners();
@@ -466,7 +502,7 @@ function setupGizmos() {
   mast.addBehavior(dragbehavior);
   gaff.addBehavior(dragbehavior);
   tillerRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0, 1, 0), BABYLON.Color3.Yellow(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal());
-  tillerRotationGizmo.attachedMesh = tiller;
+  tillerRotationGizmo.attachedMesh = null;
   tillerRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   tillerRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   tillerRotationGizmo.scaleRatio = 0.3;
@@ -489,7 +525,7 @@ function setupGizmos() {
     }
   });
   mastRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0, 1, 0), BABYLON.Color3.Yellow(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal());
-  mastRotationGizmo.attachedMesh = mast;
+  mastRotationGizmo.attachedMesh = null;
   mastRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   mastRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   mastRotationGizmo.scaleRatio = 0.25;
@@ -514,7 +550,7 @@ function setupGizmos() {
   gaffMovementGizmo = new BABYLON.AxisDragGizmo(new BABYLON.Vector3(0, 1, 0), BABYLON.Color3.Red(), utilLayer, undefined, 3, BABYLON.Color3.Teal());
   gaffMovementGizmo.updateGizmoRotationToMatchAttachedMesh = false;
   gaffMovementGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-  gaffMovementGizmo.attachedMesh = gaff;
+  gaffMovementGizmo.attachedMesh = null;
   gaffMovementGizmo.scaleRatio = 0.35;
   gaffMovementGizmo.dragBehavior.onDragObservable.add((e) => {
     const y = gaff.position.y;
@@ -531,7 +567,7 @@ function setupGizmos() {
     }
   });
   gaffRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0, 0, 1), BABYLON.Color3.Green(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal());
-  gaffRotationGizmo.attachedMesh = gaff;
+  gaffRotationGizmo.attachedMesh = null;
   gaffRotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
   gaffRotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
   gaffRotationGizmo.sensitivity = 0.5;
@@ -591,12 +627,8 @@ function moveBoat() {
   if (actionParams.length == 0) {
     return;
   }
-  console.log("move boat");
   const inputWE = actionParams[0];
   const inputNS = actionParams[1];
-  if (inputNS != "" || inputWE != "") {
-    ws.send(JSON.stringify(new ClientPacket(2 /* PLAYER_POSITION_UPDATE */, new PlayerLocation([boatObj.absolutePosition.x, boatObj.absolutePosition.z], boatObj.rotation.y, velocity))));
-  }
   if (inputNS == "N") {
     if (velocity < MAX_VELOCITY) {
       velocity += acceleration;
@@ -628,7 +660,6 @@ function addKeyListeners() {
         actionParams[0] = "";
       }
       if (key === "w") {
-        console.log(key, pressedMoveKeys);
         actionParams[1] = "N";
       } else if (key == "s") {
         actionParams[1] = "S";
@@ -639,18 +670,19 @@ function addKeyListeners() {
       if (!pressedMoveKeys.includes(key)) {
         pressedMoveKeys.push(key);
       }
+      let oceanPivot = scene.getNodeByName("ocean-camera-pivot");
       if (key == "ArrowLeft") {
         shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z);
       } else if (key == "ArrowRight") {
         shipCamera.position = new BABYLON.Vector3(shipCamera.position.x + 5, shipCamera.position.y, shipCamera.position.z);
       } else if (key == ",") {
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y, shipCamera.position.z - 5);
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y - 5, oceanPivot.position.z);
       } else if (key == ".") {
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y, shipCamera.position.z + 5);
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y + 5, oceanPivot.position.z);
       } else if (key == "ArrowUp") {
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y + 5, shipCamera.position.z);
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x + 1, oceanPivot.position.y, oceanPivot.position.z);
       } else if (key == "ArrowDown") {
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x, shipCamera.position.y - 5, shipCamera.position.z);
+        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x - 1, oceanPivot.position.y, oceanPivot.position.z);
       }
     }
   });
@@ -684,20 +716,21 @@ async function queueClientAction() {
         moveKeysPressed = true;
       }
     }
-    console.log(velocity);
     await currentAction();
     boatObj.locallyTranslate(new BABYLON.Vector3(velocity, 0, 0));
+    ws.send(JSON.stringify(new ClientPacket(2 /* PLAYER_POSITION_UPDATE */, new PlayerLocation([boatObj.absolutePosition.x, boatObj.absolutePosition.z], boatObj.rotation.y, velocity))));
     if (shipView) {
       shipCamera.parent = scene.getNodeByName("camera-pivot");
       shipCamera.position = shipCamera.parent.position;
       shipCamera.target = scene.getNodeByName("camera-target").position;
     } else {
-      oceanCamera.position = boatObj.position.add(new BABYLON.Vector3(0, 50, -3));
+      oceanCamera.parent = scene.getNodeByName("ocean-camera-pivot");
+      oceanCamera.target = scene.getNodeByName("camera-target").position;
     }
     updateVisibleChatHistory();
   }
 }
-var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, oceanCamera, shipCamera, tiller, mast, gaff, scene, shipView = false, tillerRotationGizmo, mastRotationGizmo, gaffMovementGizmo, gaffRotationGizmo, acceleration = 0.02, MAX_VELOCITY = 0.2, velocity = 0, rotSpeed, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
+var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, oceanCamera, shipCamera, tiller, mast, gaff, loadedPlayers, scene, shipView = false, tillerRotationGizmo, mastRotationGizmo, gaffMovementGizmo, gaffRotationGizmo, acceleration = 0.02, MAX_VELOCITY = 0.2, velocity = 0, rotSpeed, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
 var init_game = __esm(() => {
   init_PacketTypes();
   init_Consts();
@@ -705,6 +738,7 @@ var init_game = __esm(() => {
   iframe = window.self;
   canvas = document.createElement("canvas");
   chatHistory = [];
+  loadedPlayers = [];
   rotSpeed = 5 * (Math.PI / 180);
   pressedMoveKeys = [];
   actionParams = [];
@@ -715,7 +749,7 @@ init_Consts();
 init_PacketTypes();
 var ws2 = new WebSocket("ws://localhost:2323");
 var gameFrameWindow;
-var gameModule = await Promise.resolve().then(() => (init_game(), exports_game));
+var gameModule = await Promise.resolve().then(() => (init_game(), {}));
 addEventListener("load", async () => {
   const gameFrame = document.getElementById("gameFrame");
   gameFrameWindow = gameFrame.contentWindow;
@@ -741,7 +775,7 @@ addEventListener("load", async () => {
         </body>
     </html>`;
   (async function linkGameToIFrame() {
-    gameModule.linkWsToGame(gameFrameWindow, ws2);
+    linkWsToGame(gameFrameWindow, ws2);
   }).call(gameFrame.contentDocument);
 });
 var nameInput = document.getElementById("nameInput");
@@ -803,8 +837,11 @@ nameInput.addEventListener("keyup", (event) => {
 });
 function joinGame() {
   name2 = nameInput.value;
-  if (ship) {
-    ws2.send(JSON.stringify(new ClientPacket(1 /* JOIN_WITH_NAME */, name2)));
+  if (ship != 0 /* NONE */) {
+    ws2.send(JSON.stringify(new ClientPacket(1 /* JOIN_WITH_NAME */, {
+      name: name2,
+      type: ship
+    })));
   }
 }
 var chooseShipOverlay = document.getElementById("chooseShipOverlay");
@@ -824,8 +861,8 @@ ws2.addEventListener("message", (event) => {
       break;
     case 2 /* JOIN_ACCEPTED */:
       if (gameModule && gameFrameWindow) {
-        if (typeof gameModule.setJoinedWithName === "function") {
-          gameModule.setJoinedWithName.call(gameFrameWindow, name2);
+        if (typeof setJoinedWithName === "function") {
+          setJoinedWithName.call(gameFrameWindow, name2);
         }
       }
       nameWarning.style.visibility = "hidden";
@@ -833,17 +870,19 @@ ws2.addEventListener("message", (event) => {
       chooseShipOverlay.style.visibility = "hidden";
       break;
     case 4 /* UPDATE_GLOBAL_PLAYER_POSITIONS */:
-      console.log("add boat");
       const playerPositions = msg.data;
       if (gameModule && gameFrameWindow) {
         for (let player of playerPositions) {
           if (player.name != name2)
-            gameModule.addOtherBoat.call(gameFrameWindow, player);
+            addOtherBoat.call(gameFrameWindow, player);
         }
       }
       break;
     case 5 /* INCOMING_CHAT_MESSAGE */:
-      gameModule.displayInboundChat(msg.data);
+      displayInboundChat(msg.data);
+      break;
+    case 6 /* PLAYER_LEFT_EXPERIENCE */:
+      removePlayerShipOnLeave(msg.data);
       break;
     default:
       console.log("fail");
@@ -851,7 +890,3 @@ ws2.addEventListener("message", (event) => {
 });
 </script></body>
 </html>
-<!--
-viewport is rect
-ship moves freely; need canvas and redraw
--->

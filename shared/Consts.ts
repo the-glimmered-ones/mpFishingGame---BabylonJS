@@ -8,6 +8,20 @@ export const enum ShipTypes {
     "SUBMARINE",
 }
 
+class Ship {
+    type: ShipTypes = ShipTypes.NONE
+    acceleration: number = 0
+    max_velocity: number = 0
+    rotation_speed: number = 0
+}
+
+export class Sailboat extends Ship {
+    type: ShipTypes = ShipTypes.SAILBOAT
+    acceleration: number = .02
+    max_velocity: number = .2
+    rotation_speed: number = 5 * (Math.PI/180); //5 deg
+}
+
 export class PlayerLocation {
     position: number[] = [0,0]
     angle: number = 0.0

@@ -3,19 +3,20 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 import page from "@build/index.html"
 import { readdir } from "node:fs/promises";
 import { englishRecommendedTransformers, RegExpMatcher, TextCensor, englishDataset } from 'obscenity';
+import { Server } from "node:http";
 
 
 class Client {
     ws: any
     name: string = ""
-    data: ClientData = new ClientData([0,0], 0.0, 0.0, ShipTypes.SAILBOAT)
+    data: ClientData = new ClientData([0,0], 0.0, 0.0, ShipTypes.NONE)
 }
 
 class ClientData {
     pos: number[] = [0,0]
     angle: number = 0.0
     velocity: number = 0.0
-    shipType: ShipTypes = ShipTypes.SAILBOAT
+    shipType: ShipTypes = ShipTypes.NONE
     constructor(pos: number[], angle: number, velocity: number, shipType: ShipTypes){
         this.pos = pos;
         this.angle = angle;
@@ -90,33 +91,41 @@ Bun.serve({
             //console.log(clients)
         },
         close(ws) {
+            let name = ""
             console.log(clients.length)
             console.log("user disconnect")
             for (let i = 0; i < clients.length; i++){
-                if (clients[i].ws.remoteAddress == ws.remoteAddress) {
+                if (clients[i].name == ws.data.client.name) {
+                    name = clients[i].name
                     nameList.splice(nameList.indexOf(clients[i].name), 1)
                     clients.splice(i, 1)
+                }
+            }
+            if (name != ""){
+                for (let i = 0; i < clients.length; i++){
+                    clients[i].ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_LEFT_EXPERIENCE, name)))
                 }
             }
         },
         message(ws, message: string){
             var msg: ClientPacket = JSON.parse(message)// msg = {packetType, everything else}
-            console.log(msg)
-            console.log("msg recieved")
+            //console.log(msg)
+            //console.log("msg recieved")
             switch(msg.packetType){
 
             case ClientPacketTypes.NONE:
                 break;
 
             case ClientPacketTypes.JOIN_WITH_NAME:
-                console.log(nameList)
-                if (msg.data == ""){//TODO also put a character limit here
+                const name = msg.data.name
+                const shipType = msg.data.type
+                if (name == ""){//TODO also put a character limit here
                     console.log("invalid name")
                     ws.send(JSON.stringify(
                         new ServerPacket(ServerPacketTypes.INVALID_NAME_DETECTED)))
                     break;
                 }
-                if(nameList.includes(msg.data)){
+                if(nameList.includes(name)){
                     ws.send(JSON.stringify(
                         new ServerPacket(ServerPacketTypes.DUPLICATE_NAME_DETECTED)))
                     console.log("dupe name")
@@ -128,10 +137,12 @@ Bun.serve({
                         const client = clients[i]
                         if (client.ws.remoteAddress == ws.remoteAddress){
                             //console.log("found id")
-                            client.name = msg.data
+                            ws.data.client.name = name
+                            client.name = name
                             console.log(`accepted ${client.name}`)
                             nameList[i] = client.name
-                            
+                            client.data.shipType = shipType
+                            //console.log(client)
                             ws.send(JSON.stringify(
                                 new ServerPacket(ServerPacketTypes.JOIN_ACCEPTED)))
                             break;
@@ -141,12 +152,20 @@ Bun.serve({
                 }
 
             case ClientPacketTypes.PLAYER_POSITION_UPDATE:
-                console.log("position update")
                 let arrClient = clients.find((client) => {
-                    return client.ws.remoteAddress == ws.remoteAddress;
+                    return client.name == ws.data.client.name;
                 })
+                // for (let client of clients){
+                //     if (client.name == ws.data.client.name){
+                //         let location: PlayerLocation = msg.data
+                //         client.data.pos = location.position
+                //         client.data.angle = location.angle
+                //         client.data.velocity = location.velocity
+                //     }
+                // }
                 let location: PlayerLocation = msg.data
                 if (arrClient){
+                    console.log("position update")
                     arrClient.data.pos = location.position
                     arrClient.data.angle = location.angle
                     arrClient.data.velocity = location.velocity
@@ -168,7 +187,7 @@ Bun.serve({
                 chatHistory.push(chatMessage)
                 for (let client of clients){
                     //if (client.ws.remoteAddress != ws.remoteAddress){
-                        client.ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.INCOMING_CHAT_MESSAGE, chatMessage)))
+                    client.ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.INCOMING_CHAT_MESSAGE, chatMessage)))
                     //}
                 }
                 break
@@ -178,28 +197,28 @@ Bun.serve({
   }, // handlers
 })
 
-if (nameList.length > 0)
-    setInterval(serverTick, 15)
+setInterval(serverTick, 15)
 
 async function serverTick(){
-//TODO: send out all ship info to every player, even unnamed ones
-//should include position, angle, type, name
-    const globalClientLocations: GlobalClientLocation[] = []
-    for (let client of clients){
-        if (client.name != ""){
-            //console.log(client.name)
-            globalClientLocations.push(new GlobalClientLocation(
-                client.data.pos,
-                client.data.angle,
-                client.data.shipType,
-                client.name
-            ))
+    if (nameList.length > 0){
+        //TODO: send out all ship info to every player, even unnamed ones
+        //should include position, angle, type, name
+        const globalClientLocations: GlobalClientLocation[] = []
+        for (let client of clients){
+            if (client.name != ""){
+                globalClientLocations.push(new GlobalClientLocation(
+                    client.data.pos,
+                    client.data.angle,
+                    client.data.shipType,
+                    client.name
+                ))
+            }
+        }
+        for (let client of clients){
+            client.ws.send(JSON.stringify(new ServerPacket(
+                ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS, 
+                globalClientLocations
+            )))
         }
     }
-    for (let client of clients){
-        client.ws.send(JSON.stringify(new ServerPacket(
-            ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS, 
-            globalClientLocations
-        )))
-    }
-} 
+}
