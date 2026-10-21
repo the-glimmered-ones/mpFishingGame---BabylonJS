@@ -134,7 +134,10 @@ ws.addEventListener("message", (event) => {
             break
         case ServerPacketTypes.JOIN_ACCEPTED:
             //console.log("hidden")
-
+            nameWarning.style.visibility = "hidden"
+            nameWarning.style.display = "none"
+            chooseShipOverlay.style.visibility = "hidden"
+            nameWarning.textContent = ""
             if (gameModule && gameFrameWindow){
                 if (typeof gameModule.setJoinedWithName === "function"){
                     gameModule.setJoinedWithName.call(gameFrameWindow, name)
@@ -142,18 +145,26 @@ ws.addEventListener("message", (event) => {
                 }
                 
             }
-            nameWarning.style.visibility = "hidden"
-            nameWarning.style.display = "none"
-            chooseShipOverlay.style.visibility = "hidden"
+            break
+        case ServerPacketTypes.PLAYER_START_POSITIONS:
+            const posList: GlobalClientLocation[] = msg.data
+            if (gameModule && gameFrameWindow){
+                for (let player of posList){
+                    if (player.name != name){
+                        gameModule.addOtherBoat.call(gameFrameWindow, player)
+                        console.log(`${player.name} boat added`)
+                    }
+                }
+            }
             break
         case ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS:
-            //console.log("add boat")
              const playerPositions: GlobalClientLocation[] = msg.data
-             if (gameModule && gameFrameWindow){
+             if (gameModule){
                 for (let player of playerPositions){
-                    if (player.name != name)
-                        //console.log("other boat added")
-                        gameModule.addOtherBoat.call(gameFrameWindow, player)
+                    if (player.name != name){
+                        //console.log(`${player.name} pos updated`)
+                        gameModule.updateExistingPlayerLocation(player)
+                    }
                 }
             }
             break

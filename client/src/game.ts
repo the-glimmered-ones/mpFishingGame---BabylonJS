@@ -1,5 +1,6 @@
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
+import { WaterMaterial } from "babylonjs-materials";
 var ws: WebSocket = new WebSocket("");
 var iframe: Window = window.self;
 //fixed loading times by hosting this file online and importing it when needed
@@ -279,8 +280,18 @@ var gaff: BABYLON.AbstractMesh;
 
 async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     //sceneMeshes = (await BABYLON.ImportMeshAsync("textures/sailboat.obj", scene));//"textures/boat-placeholder.obj", scene));
-    await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene)
-    boatMesh = <BABYLON.Mesh> scene.getNodeByName("BOAT")
+    await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene).then(() => {
+      boatMesh = <BABYLON.Mesh> scene.getNodeByName("BOAT");
+      boatMesh.checkCollisions = true
+      console.log(boatMesh.collider)
+      boatMesh.collisionGroup = 1
+      boatMesh.onCollideObservable.add(() => {
+        console.log("collision")
+        velocity = 0
+      })
+      addPreloadedPlayers();
+    })
+    
     
     console.log(scene)
     var woodMat: BABYLON.StandardMaterial;
@@ -306,7 +317,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     shipCamera.target = (<BABYLON.TransformNode>scene.getNodeByName("camera-target")).position
     camera = oceanCamera
     shipCamera.fov = .33
-    console.log(scene.cameras)
+    //console.log(scene.cameras)
     setupGizmos();
 
     for (let mesh of scene.meshes){
@@ -339,7 +350,7 @@ function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector
   if (cameras){
     //oceanCamera.parent = boatRoot
     //shipCamera.parent = boatRoot
-    console.log("cameras added")
+    //console.log("cameras added")
     oceanCamera.position = (<BABYLON.TransformNode>oceanCamera.parent).position
     oceanCamera.target = (<BABYLON.TransformNode> scene.getNodeByName("camera-target")).position
     oceanCamera.fov = .386
@@ -365,37 +376,46 @@ class LoadedPlayer {
     this.mesh = mesh
   }
 }
+const preloadedPlayers: GlobalClientLocation[] = []
 const loadedPlayers: LoadedPlayer[] = []
 export function addOtherBoat(player: GlobalClientLocation){
-  if (!boatMesh) {return;}
+  if (!boatMesh) { preloadedPlayers.push(player); return;}
   if (player.name == name) {return;}
-  if (!loadedPlayers.find(({name}) => {return player.name == name})){
+  //if (!loadedPlayers.find(({name}) => {return player.name == name})){
     const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${player.name}BoatInstance`)//TODO instance of different mesh depending on ship type
     mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1])
     mesh.rotation = new BABYLON.Vector3(0, player.angle, 0)
     mesh.parent = null
+    mesh.collisionMask = 2
     scene.addMesh(mesh)
     //const transform = addBoat(mesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0))
     loadedPlayers.push(new LoadedPlayer(player.name, mesh))
-  }
-  else{
-    updateExistingPlayerLocation(player);
+}
+
+function addPreloadedPlayers(){
+  for (let player of preloadedPlayers){
+    addOtherBoat(player)
   }
 }
 
-function updateExistingPlayerLocation(data: GlobalClientLocation){
+export function updateExistingPlayerLocation(data: GlobalClientLocation){
   const player = loadedPlayers.find(({name}) => {return data.name == name})
-  console.log(loadedPlayers)
+  //console.log("players: ", loadedPlayers)
   if (player?.mesh){
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
     player.mesh.rotation = new BABYLON.Vector3(0,data.angle,0)
-    console.log(`${player.name} moved to ${player.mesh.position}`)
+    //console.log(`${player.name} moved to ${player.mesh.position}`)
+  }
+  else{
+    addOtherBoat(data)
   }
 }
 
 export function removePlayerShipOnLeave(name: string){
   let result = loadedPlayers.find((player) => {return name == player.name})
+  console.log(result)
   if (result){
+    console.log("mesh removed")
     scene.removeMesh(result.mesh, true)
     result.mesh.dispose()
     loadedPlayers.splice(loadedPlayers.indexOf(result),1)

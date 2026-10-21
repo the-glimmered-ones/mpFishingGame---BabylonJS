@@ -342,8 +342,17 @@ function toggleMap(hideElem, showElem) {
   showElem.style.visibility = "visible";
 }
 async function loadBoatMesh(scene, pos) {
-  await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
-  boatMesh = scene.getNodeByName("BOAT");
+  await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene).then(() => {
+    boatMesh = scene.getNodeByName("BOAT");
+    boatMesh.checkCollisions = true;
+    console.log(boatMesh.collider);
+    boatMesh.collisionGroup = 1;
+    boatMesh.onCollideObservable.add(() => {
+      console.log("collision");
+      velocity = 0;
+    });
+    addPreloadedPlayers();
+  });
   console.log(scene);
   var woodMat;
   woodMat = new BABYLON.StandardMaterial("boatMat");
@@ -368,7 +377,6 @@ async function loadBoatMesh(scene, pos) {
   shipCamera.target = scene.getNodeByName("camera-target").position;
   camera = oceanCamera;
   shipCamera.fov = 0.33;
-  console.log(scene.cameras);
   setupGizmos();
   for (let mesh of scene.meshes) {
     if (mesh.name == "gaff" || mesh.name == "boom") {
@@ -391,7 +399,6 @@ function addBoat(mesh, pos, scale, rotation, cameras) {
   boatObj = mesh;
   console.log(mesh);
   if (cameras) {
-    console.log("cameras added");
     oceanCamera.position = oceanCamera.parent.position;
     oceanCamera.target = scene.getNodeByName("camera-target").position;
     oceanCamera.fov = 0.386;
@@ -413,40 +420,43 @@ class LoadedPlayer {
 }
 function addOtherBoat(player) {
   if (!boatMesh) {
+    preloadedPlayers.push(player);
     return;
   }
   if (player.name == name) {
     return;
   }
-  if (!loadedPlayers.find(({ name }) => {
-    return player.name == name;
-  })) {
-    const mesh = boatMesh.createInstance(`${player.name}BoatInstance`);
-    mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]);
-    mesh.rotation = new BABYLON.Vector3(0, player.angle, 0);
-    mesh.parent = null;
-    scene.addMesh(mesh);
-    loadedPlayers.push(new LoadedPlayer(player.name, mesh));
-  } else {
-    updateExistingPlayerLocation(player);
+  const mesh = boatMesh.createInstance(`${player.name}BoatInstance`);
+  mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]);
+  mesh.rotation = new BABYLON.Vector3(0, player.angle, 0);
+  mesh.parent = null;
+  mesh.collisionMask = 2;
+  scene.addMesh(mesh);
+  loadedPlayers.push(new LoadedPlayer(player.name, mesh));
+}
+function addPreloadedPlayers() {
+  for (let player of preloadedPlayers) {
+    addOtherBoat(player);
   }
 }
 function updateExistingPlayerLocation(data) {
   const player = loadedPlayers.find(({ name }) => {
     return data.name == name;
   });
-  console.log(loadedPlayers);
   if (player?.mesh) {
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1]);
     player.mesh.rotation = new BABYLON.Vector3(0, data.angle, 0);
-    console.log(`${player.name} moved to ${player.mesh.position}`);
+  } else {
+    addOtherBoat(data);
   }
 }
 function removePlayerShipOnLeave(name) {
   let result = loadedPlayers.find((player) => {
     return name == player.name;
   });
+  console.log(result);
   if (result) {
+    console.log("mesh removed");
     scene.removeMesh(result.mesh, true);
     result.mesh.dispose();
     loadedPlayers.splice(loadedPlayers.indexOf(result), 1);
@@ -730,7 +740,7 @@ async function queueClientAction() {
     updateVisibleChatHistory();
   }
 }
-var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, oceanCamera, shipCamera, tiller, mast, gaff, loadedPlayers, scene, shipView = false, tillerRotationGizmo, mastRotationGizmo, gaffMovementGizmo, gaffRotationGizmo, acceleration = 0.02, MAX_VELOCITY = 0.2, velocity = 0, rotSpeed, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
+var ws, iframe, canvas, engine = null, boatRoot, boatObj, camera, gameLoaded = false, joinedWithName, chatHistory, BOAT_Y_POSITION, BOAT_SCALE, BOAT_STARTING_ROTATION, name = "", chatDisplay, boatMesh, oceanCamera, shipCamera, tiller, mast, gaff, preloadedPlayers, loadedPlayers, scene, shipView = false, tillerRotationGizmo, mastRotationGizmo, gaffMovementGizmo, gaffRotationGizmo, acceleration = 0.02, MAX_VELOCITY = 0.2, velocity = 0, rotSpeed, pressedMoveKeys, currentAction = () => {}, actionParams, delta;
 var init_game = __esm(() => {
   init_PacketTypes();
   init_Consts();
@@ -738,6 +748,7 @@ var init_game = __esm(() => {
   iframe = window.self;
   canvas = document.createElement("canvas");
   chatHistory = [];
+  preloadedPlayers = [];
   loadedPlayers = [];
   rotSpeed = 5 * (Math.PI / 180);
   pressedMoveKeys = [];
@@ -860,28 +871,41 @@ ws2.addEventListener("message", (event) => {
       nameWarning.textContent = "Please use a valid name";
       break;
     case 2 /* JOIN_ACCEPTED */:
+      nameWarning.style.visibility = "hidden";
+      nameWarning.style.display = "none";
+      chooseShipOverlay.style.visibility = "hidden";
+      nameWarning.textContent = "";
       if (gameModule && gameFrameWindow) {
         if (typeof setJoinedWithName === "function") {
           setJoinedWithName.call(gameFrameWindow, name2);
         }
       }
-      nameWarning.style.visibility = "hidden";
-      nameWarning.style.display = "none";
-      chooseShipOverlay.style.visibility = "hidden";
       break;
-    case 4 /* UPDATE_GLOBAL_PLAYER_POSITIONS */:
-      const playerPositions = msg.data;
+    case 4 /* PLAYER_START_POSITIONS */:
+      const posList = msg.data;
       if (gameModule && gameFrameWindow) {
-        for (let player of playerPositions) {
-          if (player.name != name2)
+        for (let player of posList) {
+          if (player.name != name2) {
             addOtherBoat.call(gameFrameWindow, player);
+            console.log(`${player.name} boat added`);
+          }
         }
       }
       break;
-    case 5 /* INCOMING_CHAT_MESSAGE */:
+    case 5 /* UPDATE_GLOBAL_PLAYER_POSITIONS */:
+      const playerPositions = msg.data;
+      if (gameModule) {
+        for (let player of playerPositions) {
+          if (player.name != name2) {
+            updateExistingPlayerLocation(player);
+          }
+        }
+      }
+      break;
+    case 6 /* INCOMING_CHAT_MESSAGE */:
       displayInboundChat(msg.data);
       break;
-    case 6 /* PLAYER_LEFT_EXPERIENCE */:
+    case 7 /* PLAYER_LEFT_EXPERIENCE */:
       removePlayerShipOnLeave(msg.data);
       break;
     default:

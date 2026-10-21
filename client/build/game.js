@@ -251,8 +251,17 @@ var tiller;
 var mast;
 var gaff;
 async function loadBoatMesh(scene, pos) {
-  await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene);
-  boatMesh = scene.getNodeByName("BOAT");
+  await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene).then(() => {
+    boatMesh = scene.getNodeByName("BOAT");
+    boatMesh.checkCollisions = true;
+    console.log(boatMesh.collider);
+    boatMesh.collisionGroup = 1;
+    boatMesh.onCollideObservable.add(() => {
+      console.log("collision");
+      velocity = 0;
+    });
+    addPreloadedPlayers();
+  });
   console.log(scene);
   var woodMat;
   woodMat = new BABYLON.StandardMaterial("boatMat");
@@ -277,7 +286,6 @@ async function loadBoatMesh(scene, pos) {
   shipCamera.target = scene.getNodeByName("camera-target").position;
   camera = oceanCamera;
   shipCamera.fov = 0.33;
-  console.log(scene.cameras);
   setupGizmos();
   for (let mesh of scene.meshes) {
     if (mesh.name == "gaff" || mesh.name == "boom") {
@@ -300,7 +308,6 @@ function addBoat(mesh, pos, scale, rotation, cameras) {
   boatObj = mesh;
   console.log(mesh);
   if (cameras) {
-    console.log("cameras added");
     oceanCamera.position = oceanCamera.parent.position;
     oceanCamera.target = scene.getNodeByName("camera-target").position;
     oceanCamera.fov = 0.386;
@@ -320,43 +327,47 @@ class LoadedPlayer {
     this.mesh = mesh;
   }
 }
+var preloadedPlayers = [];
 var loadedPlayers = [];
 function addOtherBoat(player) {
   if (!boatMesh) {
+    preloadedPlayers.push(player);
     return;
   }
   if (player.name == name) {
     return;
   }
-  if (!loadedPlayers.find(({ name }) => {
-    return player.name == name;
-  })) {
-    const mesh = boatMesh.createInstance(`${player.name}BoatInstance`);
-    mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]);
-    mesh.rotation = new BABYLON.Vector3(0, player.angle, 0);
-    mesh.parent = null;
-    scene.addMesh(mesh);
-    loadedPlayers.push(new LoadedPlayer(player.name, mesh));
-  } else {
-    updateExistingPlayerLocation(player);
+  const mesh = boatMesh.createInstance(`${player.name}BoatInstance`);
+  mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]);
+  mesh.rotation = new BABYLON.Vector3(0, player.angle, 0);
+  mesh.parent = null;
+  mesh.collisionMask = 2;
+  scene.addMesh(mesh);
+  loadedPlayers.push(new LoadedPlayer(player.name, mesh));
+}
+function addPreloadedPlayers() {
+  for (let player of preloadedPlayers) {
+    addOtherBoat(player);
   }
 }
 function updateExistingPlayerLocation(data) {
   const player = loadedPlayers.find(({ name }) => {
     return data.name == name;
   });
-  console.log(loadedPlayers);
   if (player?.mesh) {
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1]);
     player.mesh.rotation = new BABYLON.Vector3(0, data.angle, 0);
-    console.log(`${player.name} moved to ${player.mesh.position}`);
+  } else {
+    addOtherBoat(data);
   }
 }
 function removePlayerShipOnLeave(name) {
   let result = loadedPlayers.find((player) => {
     return name == player.name;
   });
+  console.log(result);
   if (result) {
+    console.log("mesh removed");
     scene.removeMesh(result.mesh, true);
     result.mesh.dispose();
     loadedPlayers.splice(loadedPlayers.indexOf(result), 1);
@@ -659,5 +670,6 @@ export {
   gameLoaded,
   linkWsToGame,
   removePlayerShipOnLeave,
-  setJoinedWithName
+  setJoinedWithName,
+  updateExistingPlayerLocation
 };

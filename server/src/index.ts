@@ -84,6 +84,7 @@ Bun.serve({
                     console.log("user connect")
                 //}
                 console.log(clients.length)
+                ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_START_POSITIONS, lastPosUpdate)))
             }
             
             
@@ -91,19 +92,17 @@ Bun.serve({
             //console.log(clients)
         },
         close(ws) {
-            let name = ""
             console.log(clients.length)
             console.log("user disconnect")
             for (let i = 0; i < clients.length; i++){
-                if (clients[i].name == ws.data.client.name) {
-                    name = clients[i].name
+                if (clients[i].name != "" && clients[i].name == ws.data.client.name) {
                     nameList.splice(nameList.indexOf(clients[i].name), 1)
                     clients.splice(i, 1)
                 }
             }
-            if (name != ""){
+            if (ws.data.client.name != ""){
                 for (let i = 0; i < clients.length; i++){
-                    clients[i].ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_LEFT_EXPERIENCE, name)))
+                    clients[i].ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_LEFT_EXPERIENCE, ws.data.client.name)))
                 }
             }
         },
@@ -135,7 +134,7 @@ Bun.serve({
                     //console.log("not a dupe")
                     for (let i = 0; i < clients.length; i++){
                         const client = clients[i]
-                        if (client.ws.remoteAddress == ws.remoteAddress){
+                        if (client.ws == ws){
                             //console.log("found id")
                             ws.data.client.name = name
                             client.name = name
@@ -145,6 +144,19 @@ Bun.serve({
                             //console.log(client)
                             ws.send(JSON.stringify(
                                 new ServerPacket(ServerPacketTypes.JOIN_ACCEPTED)))
+                            //add new ship to all clients
+                            for (let client of clients){
+                                client.ws.send(JSON.stringify(
+                                new ServerPacket(
+                                    ServerPacketTypes.PLAYER_START_POSITIONS,
+                                    [new GlobalClientLocation( 
+                                        client.data.pos, 
+                                        client.data.angle, 
+                                        client.data.shipType, 
+                                        client.name
+                                    )]
+                                )))
+                            }
                             break;
                         }
                     }
@@ -152,25 +164,16 @@ Bun.serve({
                 }
 
             case ClientPacketTypes.PLAYER_POSITION_UPDATE:
-                let arrClient = clients.find((client) => {
-                    return client.name == ws.data.client.name;
-                })
-                // for (let client of clients){
-                //     if (client.name == ws.data.client.name){
-                //         let location: PlayerLocation = msg.data
-                //         client.data.pos = location.position
-                //         client.data.angle = location.angle
-                //         client.data.velocity = location.velocity
-                //     }
-                // }
-                let location: PlayerLocation = msg.data
-                if (arrClient){
-                    console.log("position update")
-                    arrClient.data.pos = location.position
-                    arrClient.data.angle = location.angle
-                    arrClient.data.velocity = location.velocity
+                for (let i = 0; i < clients.length; i++){
+                    if (clients[i].name == ws.data.client.name){
+                        let location: PlayerLocation = msg.data
+                        clients[i].data.pos = location.position
+                        clients[i].data.angle = location.angle
+                        clients[i].data.velocity = location.velocity
+                        break;
+                    }
                 }
-                
+
                 break;
             case ClientPacketTypes.SEND_CHAT:
                 //TODO censor chat w that one library, push to list, then send out to all clients
@@ -199,19 +202,23 @@ Bun.serve({
 
 setInterval(serverTick, 15)
 
+const lastPosUpdate: GlobalClientLocation[] = []
 async function serverTick(){
     if (nameList.length > 0){
         //TODO: send out all ship info to every player, even unnamed ones
         //should include position, angle, type, name
         const globalClientLocations: GlobalClientLocation[] = []
+        lastPosUpdate.splice(0)
         for (let client of clients){
             if (client.name != ""){
-                globalClientLocations.push(new GlobalClientLocation(
+                const pos = new GlobalClientLocation(
                     client.data.pos,
                     client.data.angle,
                     client.data.shipType,
                     client.name
-                ))
+                )
+                globalClientLocations.push(pos)
+                lastPosUpdate.push(pos)
             }
         }
         for (let client of clients){
