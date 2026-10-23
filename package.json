@@ -6,6 +6,7 @@
     "dev": "bun run --watch server/src/index.ts"
   },
   "main": "server/src/index.ts",
+  "files": ["shared/", "shared/textures/"],
   "dependencies": {
     "babylonjs": "^9.21.2",
     "babylonjs-gui": "^9.23.0",
@@ -18,6 +19,5 @@
   "devDependencies": {
     "@types/bun": "^1.4.2",
     "bun-types": "latest"
-  },
-  "module": "src/index.js"
+  }
 }
