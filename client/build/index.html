@@ -762,7 +762,7 @@ init_PacketTypes();
 var ws2 = new WebSocket("ws://localhost:2323");
 var gameFrameWindow;
 var gameModule = await Promise.resolve().then(() => (init_game(), {}));
-document.addEventListener("load", async () => {
+addEventListener("load", async () => {
   const gameFrame = document.getElementById("gameFrame");
   gameFrameWindow = gameFrame.contentWindow;
   gameFrameWindow.name = "gameFrameWindow";
