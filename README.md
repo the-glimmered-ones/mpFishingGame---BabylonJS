@@ -7,3 +7,5 @@ Ignore the deployments tab, I didn't understand Cloudflare was "serverless," so 
 This game is rendered using the Babylon.js framework and bundled using Bun.
 
 I don't know how to use git and OneDrive sucks massive buttcheeks so I'm not using it anymore lmao
+
+WOAHH IT AUTOMATICALLY UPDATED THE DEPLOY LINK TO THE SOMEWHAT WORKING VERCEL ONE THATS AWESOME
