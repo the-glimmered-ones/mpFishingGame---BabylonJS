@@ -380,6 +380,7 @@ const loadedPlayers: LoadedPlayer[] = []
 export function addOtherBoat(player: GlobalClientLocation){
   if (!boatMesh) { preloadedPlayers.push(player); return;}
   if (player.name == name) {return;}
+  if (!gameLoaded) {console.log("not loaded"); return;}
   //if (!loadedPlayers.find(({name}) => {return player.name == name})){
     const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${player.name}BoatInstance`)//TODO instance of different mesh depending on ship type
     mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1])
@@ -400,7 +401,7 @@ function addPreloadedPlayers(){
 export function updateExistingPlayerLocation(data: GlobalClientLocation){
   const player = loadedPlayers.find(({name}) => {return data.name == name})
   //console.log("players: ", loadedPlayers)
-  if (player?.mesh){
+  if (gameLoaded && player?.mesh){
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
     player.mesh.rotation = new BABYLON.Vector3(0,data.angle,0)
     //console.log(`${player.name} moved to ${player.mesh.position}`)
@@ -413,7 +414,7 @@ export function updateExistingPlayerLocation(data: GlobalClientLocation){
 export function removePlayerShipOnLeave(name: string){
   let result = loadedPlayers.find((player) => {return name == player.name})
   console.log(result)
-  if (result){
+  if (gameLoaded && result){
     console.log("mesh removed")
     scene.removeMesh(result.mesh, true)
     result.mesh.dispose()
