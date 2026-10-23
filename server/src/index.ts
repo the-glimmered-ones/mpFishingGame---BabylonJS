@@ -48,16 +48,16 @@ async function serveRes(url: string, subfolder: string = ""){
 Bun.serve({
     port: PORT,
     hostname: HOST_NAME,
-    routes: {
-        "/": page,
+    // routes: {
+        // "/": page,
         // "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
         // "/textures/TropicalSunnyDay/*": ({url}) => {return serveRes(url, "TropicalSunnyDay/")},
         // "/textures/*": ({url}) => {return serveRes(url)},
-    },
+    // },
     async fetch(req, server) {
         // upgrade the request to a WebSocket
         if (server.upgrade(req, { data: { client: new Client() } })) {
-            return; // do not return a Response
+            return Response.json(page); // do not return a Response
         }
         return new Response("Upgrade failed", { status: 500 });
     },
