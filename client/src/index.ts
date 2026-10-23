@@ -6,7 +6,8 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 
 var gameFrameWindow: Window
 const gameModule = await import("./game.js")
-addEventListener("load", async () => {
+//console.log(gameModule)
+document.addEventListener("load", async () => {
     const gameFrame: HTMLIFrameElement = <HTMLIFrameElement>document.getElementById("gameFrame")
     gameFrameWindow = <Window>gameFrame.contentWindow
     gameFrameWindow.name = "gameFrameWindow"

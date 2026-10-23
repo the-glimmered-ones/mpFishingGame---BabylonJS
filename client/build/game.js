@@ -375,6 +375,7 @@ function removePlayerShipOnLeave(name) {
 }
 var scene;
 async function startGame() {
+  console.log("start game");
   ws.addEventListener("open", async () => {
     canvas = iframe.document.getElementById("renderCanvas");
     engine = new BABYLON.Engine(canvas, true);
