@@ -3,15 +3,6 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 
 export const ws: WebSocket = new WebSocket("ws://localhost:2323")
 
-function getWebsocket(){
-    return ws;
-}
-
-function requestWs(window: Window) {
-    let gameWindow = window 
-    console.log("game window is " + gameWindow)
-}
-
 var gameFrameWindow: Window
 const gameModule = await import("./game.js")
 addEventListener("load", async () => {

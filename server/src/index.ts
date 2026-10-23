@@ -3,7 +3,6 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 import page from "@build/index.html"
 import { readdir } from "node:fs/promises";
 import { englishRecommendedTransformers, RegExpMatcher, TextCensor, englishDataset } from 'obscenity';
-import { Server } from "node:http";
 
 
 class Client {

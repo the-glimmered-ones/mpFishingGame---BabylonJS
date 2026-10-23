@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "bun run --watch server/src/index.ts"
   },
+  "main": "server/src/index.ts",
   "files": ["shared/", "shared/textures/"],
   "dependencies": {
     "babylonjs": "^9.21.2",
@@ -15,7 +16,7 @@
     "obscenity": "^0.4.6"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.4",
     "bun-types": "latest"
   }
 }
