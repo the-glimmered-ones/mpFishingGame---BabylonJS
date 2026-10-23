@@ -1,6 +1,5 @@
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
-import { WaterMaterial } from "babylonjs-materials";
 var ws: WebSocket = new WebSocket("");
 var iframe: Window = window.self;
 //fixed loading times by hosting this file online and importing it when needed

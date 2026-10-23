@@ -5,7 +5,7 @@
     "": {
       "name": "mpFishingGame",
       "dependencies": {
-        "babylonjs": "^9.21.2",
+        "babylonjs": "^9.32.0",
         "babylonjs-gui": "^9.23.0",
         "babylonjs-loaders": "^9.21.2",
         "babylonjs-materials": "^9.26.2",
@@ -24,7 +24,7 @@
 
     "@types/node": ["@types/node@26.2.0", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg=="],
 
-    "babylonjs": ["babylonjs@9.21.2", "", {}, "sha512-49B14bmmZdtAwscLMoxBoajqo14cnnmYVRhvDqGTxEDxbze5ChnJTKgmGJfbaG+AyzTa0i3RNAc1qOSdp6c3+Q=="],
+    "babylonjs": ["babylonjs@9.32.0", "", { "hasInstallScript": true }, "sha512-IyOvDG+kPn61zrVnxA1Hf8q/XZwSoGZSJlwVP7/IwxYdzEYNpwEDMtRWBHjarW9wbRAOifsUCMTzbM0u5YVUkg=="],
 
     "babylonjs-gltf2interface": ["babylonjs-gltf2interface@9.21.2", "", {}, "sha512-L4tPMoIgDz/lWQFYKkQMG0oIq5S24Z6Sc3aBX6nvczDLoFDs13auaC2ObOL2Tc24IiUVESjCnDa1DzrJq/m0NQ=="],
 
@@ -48,7 +48,11 @@
 
     "babylonjs-gui/babylonjs": ["babylonjs@9.23.0", "", {}, "sha512-4sLnVHbG6dXVn0EqZIEm1fC0MCrpFx5Vn60FzRpw4nDzF6kV9wU4Iq/XaBqipWUlGB40XE4djvVoAATvu6q78Q=="],
 
+    "babylonjs-loaders/babylonjs": ["babylonjs@9.21.2", "", {}, "sha512-49B14bmmZdtAwscLMoxBoajqo14cnnmYVRhvDqGTxEDxbze5ChnJTKgmGJfbaG+AyzTa0i3RNAc1qOSdp6c3+Q=="],
+
     "babylonjs-materials/babylonjs": ["babylonjs@9.26.2", "", {}, "sha512-UPvVLHT/6lus8j3gqrghhImfKXG2IPBaqBlmOJYWj6oTqVb/yZ/8MYh3+yHdX6Gl7oNvJvcyRrenm2K6xzOT2g=="],
+
+    "babylonjs-post-process/babylonjs": ["babylonjs@9.21.2", "", {}, "sha512-49B14bmmZdtAwscLMoxBoajqo14cnnmYVRhvDqGTxEDxbze5ChnJTKgmGJfbaG+AyzTa0i3RNAc1qOSdp6c3+Q=="],
 
     "babylonjs-serializers/babylonjs": ["babylonjs@9.22.1", "", {}, "sha512-OI0wYurHav8dhE5KzHrvVflGDpp4JMup8jJlBcAUS8in7hlZO6BTv7b49HchlO/Nk4P0wFZs3bcbSSZhSfXu+g=="],
 
