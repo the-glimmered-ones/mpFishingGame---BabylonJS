@@ -1,7 +1,8 @@
 import { ChatMessage, GlobalClientLocation, ShipTypes } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 
-export const ws: WebSocket = new WebSocket("ws://localhost:2323")
+// export const ws: WebSocket = new WebSocket("ws://localhost:2323")
+export const ws: WebSocket = new WebSocket("wss://babylonjs-boat-game.vercel.app:2323")
 
 var gameFrameWindow: Window
 const gameModule = await import("./game.js")
