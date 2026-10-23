@@ -29,7 +29,7 @@ const nameList: string[] = []
 console.log("server file reached")
 const HOST_NAME = "localhost"
 const PORT = 2323
-const TEXTURE_PATH = "./shared/textures/"
+const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/"//"./shared/textures/"
 const chatHistory: ChatMessage[] = []
 
 async function serveRes(url: string, subfolder: string = ""){
