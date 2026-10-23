@@ -425,6 +425,7 @@ export function removePlayerShipOnLeave(name: string){
 //https://www.reddit.com/r/javascript/comments/657ma6/attempting_to_call_parent_function_from_iframe_is/
 var scene: BABYLON.Scene;
 async function startGame(){//parent.getWebsocket()){
+  console.log("start game")
   ws.addEventListener("open", async () => {
     //if (engine == null) {
     canvas = <HTMLCanvasElement>(iframe.document.getElementById("renderCanvas"))//iframe.window.document.body.children[0])
