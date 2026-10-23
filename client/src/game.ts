@@ -40,7 +40,6 @@ export function setJoinedWithName(joinName: string){
 
 function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var scene: BABYLON.Scene = new BABYLON.Scene(engine);
-    loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
     //console.log("scene created")
     //var camera = new BABYLON.ArcRotateCamera("Camera", 3 * Math.PI / 2, 8 * Math.PI / 45, 100, BABYLON.Vector3.Zero(), scene);
     camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0,0,0), scene);
@@ -80,6 +79,7 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     water.addToRenderList(skybox);
     water.addToRenderList(ground);
     waterMesh.material = water;
+    loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
 
     // BABYLON.Effect.ShadersStore["customFragmentShader"] = `
     // #ifdef GL_ES
@@ -339,7 +339,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     if (boatMesh){
       addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
     }
-
+    return
 }
 
 function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector3, rotation: BABYLON.Vector3, cameras?: BABYLON.FreeCamera[]){

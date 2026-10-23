@@ -1,5 +1,5 @@
 /*build into one html file. all linked js/ts scripts are set to <script> tags.
-bun run build.js; bun run dev
+bun run build; bun dev
 */
 Bun.build({
     entrypoints: ["client/src/game.ts"],//, "client/src/game.html"], 

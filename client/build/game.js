@@ -61,7 +61,6 @@ function setJoinedWithName(joinName) {
 }
 function createWaterScene(engine, canvas) {
   var scene = new BABYLON.Scene(engine);
-  loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
   camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
   var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0.1), scene);
   light.diffuse = new BABYLON.Color3(1, 0.992, 0.867);
@@ -94,6 +93,7 @@ function createWaterScene(engine, canvas) {
   water.addToRenderList(skybox);
   water.addToRenderList(ground);
   waterMesh.material = water;
+  loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
   return scene;
 }
 var chatDisplay;
@@ -302,6 +302,7 @@ async function loadBoatMesh(scene, pos) {
   if (boatMesh) {
     addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
   }
+  return;
 }
 function addBoat(mesh, pos, scale, rotation, cameras) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
