@@ -9,12 +9,11 @@
   "files": ["shared/", "shared/textures/"],
   "dependencies": {
     "babylonjs": "^9.32.0",
-    "babylonjs-gui": "^9.23.0",
-    "babylonjs-loaders": "^9.21.2",
-    "babylonjs-materials": "^9.26.2",
-    "babylonjs-post-process": "^9.21.2",
-    "babylonjs-serializers": "^9.22.1",
-    "obscenity": "^0.4.6"
+    "babylonjs-gui": "^9.32.0",
+    "babylonjs-loaders": "^9.32.0",
+    "babylonjs-materials": "^9.32.0",
+    "babylonjs-post-process": "^9.32.0",
+    "babylonjs-serializers": "^9.32.0"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",

@@ -6,12 +6,11 @@
       "name": "mpFishingGame",
       "dependencies": {
         "babylonjs": "^9.32.0",
-        "babylonjs-gui": "^9.23.0",
-        "babylonjs-loaders": "^9.21.2",
-        "babylonjs-materials": "^9.26.2",
-        "babylonjs-post-process": "^9.21.2",
-        "babylonjs-serializers": "^9.22.1",
-        "obscenity": "^0.4.6",
+        "babylonjs-gui": "^9.32.0",
+        "babylonjs-loaders": "^9.32.0",
+        "babylonjs-materials": "^9.32.0",
+        "babylonjs-post-process": "^9.32.0",
+        "babylonjs-serializers": "^9.32.0",
       },
       "devDependencies": {
         "@types/bun": "^1.4.4",
@@ -22,40 +21,24 @@
   "packages": {
     "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],
 
-    "@types/node": ["@types/node@26.2.0", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg=="],
+    "@types/node": ["@types/node@26.6.5", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg=="],
 
     "babylonjs": ["babylonjs@9.32.0", "", { "hasInstallScript": true }, "sha512-IyOvDG+kPn61zrVnxA1Hf8q/XZwSoGZSJlwVP7/IwxYdzEYNpwEDMtRWBHjarW9wbRAOifsUCMTzbM0u5YVUkg=="],
 
-    "babylonjs-gltf2interface": ["babylonjs-gltf2interface@9.21.2", "", {}, "sha512-L4tPMoIgDz/lWQFYKkQMG0oIq5S24Z6Sc3aBX6nvczDLoFDs13auaC2ObOL2Tc24IiUVESjCnDa1DzrJq/m0NQ=="],
+    "babylonjs-gltf2interface": ["babylonjs-gltf2interface@9.32.0", "", {}, "sha512-ANCt1Watb93re9XI3P0N05OrdGmS5jyfV+L+/+3/Pu+ye7ttC++7KdmM8JU7vCXKnrnK8G1vPJNUlVgRN3rVhw=="],
 
-    "babylonjs-gui": ["babylonjs-gui@9.23.0", "", { "dependencies": { "babylonjs": "9.23.0" } }, "sha512-VFcqBAO+m6X5pzDFmJUasbeynF2OwpcFW71I0lNM7MEuOGQHNWoPwM/RJfxT2P7v+xiStJNHzlvJwGCa0sZOrw=="],
+    "babylonjs-gui": ["babylonjs-gui@9.32.0", "", { "dependencies": { "babylonjs": "9.32.0" } }, "sha512-eVkrg1leEfFvZl4XoLMFwrl2gKpKAsJo+IHa75Iga+FHjNU3T4vF9Vsf6nRMYHxsAGfDZ7JadXS2V1mFHPymvQ=="],
 
-    "babylonjs-loaders": ["babylonjs-loaders@9.21.2", "", { "dependencies": { "babylonjs": "9.21.2", "babylonjs-gltf2interface": "9.21.2" } }, "sha512-0DymqrJrxg4HKsLB+0SJt6g0YNbPpt+BziDQKSP87dMg8ZPcHqroqXyT/pZsYc/dEUnOFeIT3hSrS21T2XHRWg=="],
+    "babylonjs-loaders": ["babylonjs-loaders@9.32.0", "", { "dependencies": { "babylonjs": "9.32.0", "babylonjs-gltf2interface": "9.32.0" } }, "sha512-m4grXqAQkzcWUZquKJWm8mYL/qak72d5VWekpRn82Fuu26SvhekYyb2yjQxEqjForFiutyuI5X0Up/JohXII9Q=="],
 
-    "babylonjs-materials": ["babylonjs-materials@9.26.2", "", { "dependencies": { "babylonjs": "9.26.2" } }, "sha512-LGGAmNIWGJOSqBuMNbX/gKEsofRCSvHr2hselkuqu+/5NDoJhcPN4dJ6UbVrgiSfT5ffwsesxxLRlv0KhvDQWg=="],
+    "babylonjs-materials": ["babylonjs-materials@9.32.0", "", { "dependencies": { "babylonjs": "9.32.0" } }, "sha512-XrTXCja9Z2rr8w/a4TTxS4Km7IXXYf7JJmTTjeC0is+TI/IFHKYZvYzKqtsCqWhG5IUxLTOP3XPl/OWtRV9X6g=="],
 
-    "babylonjs-post-process": ["babylonjs-post-process@9.21.2", "", { "dependencies": { "babylonjs": "9.21.2" } }, "sha512-6DGgw4DrS0Neeg2MVD/cxlJGVILxaMxvxUwiTlR59Hpre5Rl5gTsqZ7CcEdSSeMgvNstGNeyfo6smKNkoQVf+A=="],
+    "babylonjs-post-process": ["babylonjs-post-process@9.32.0", "", { "dependencies": { "babylonjs": "9.32.0" } }, "sha512-SpKy8VRqgiSkU6qHknAFayasqafaVm/2QDDIdZWlkODI7A/tbyU5g+WVH9TbCcGXH2BPYXu6BJc3kGi7s5W/6g=="],
 
-    "babylonjs-serializers": ["babylonjs-serializers@9.22.1", "", { "dependencies": { "babylonjs": "9.22.1", "babylonjs-gltf2interface": "9.22.1" } }, "sha512-TYxMa8cD43Y0fo2xenj70Gu2f1NKhwLcfh6CsxisY8yrtTxx9Wpy4ckiF6IP/3+YxgYRZnHYpp/z7LzZ/HFJ0g=="],
+    "babylonjs-serializers": ["babylonjs-serializers@9.32.0", "", { "dependencies": { "babylonjs": "9.32.0", "babylonjs-gltf2interface": "9.32.0" } }, "sha512-2jwwD7DlOx5v1SEQSzdMoBduCJpuvLV2YTQdMGWt410YfmytmeIRLpJ+f60qLSkpr3IONtpiDpCODihm4AjdLA=="],
 
-    "bun-types": ["bun-types@1.3.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-4N0ig0fEomHt5R0KCFWjovxow98rIoRwKolrYdCcknNwMekCXRnWEUvgu5soYV8QXtVsrUD8B95MBOZGPvr6KQ=="],
+    "bun-types": ["bun-types@1.4.4", "", { "dependencies": { "@types/node": "*", "undici-types": "*" } }, "sha512-yjrJh5oGX7mMPKGd19YXyIjmEuj4G4zNC30bs7PM9Az7NQ3ndF3j6hbeRdvJTRQEhJ/FYQwW0a2moweEi2hMxQ=="],
 
-    "obscenity": ["obscenity@0.4.6", "", {}, "sha512-pHk7kNN7j3L3zGhhGnwxjvXIGsPpLrcZl2r58fqWh/V/rH6b/dafscj2sMmAY+A/9/wPsocLmimgGk2DKeKsFQ=="],
-
-    "undici-types": ["undici-types@8.3.0", "", {}, "sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ=="],
-
-    "@types/bun/bun-types": ["bun-types@1.4.4", "", { "dependencies": { "@types/node": "*", "undici-types": "*" } }, "sha512-yjrJh5oGX7mMPKGd19YXyIjmEuj4G4zNC30bs7PM9Az7NQ3ndF3j6hbeRdvJTRQEhJ/FYQwW0a2moweEi2hMxQ=="],
-
-    "babylonjs-gui/babylonjs": ["babylonjs@9.23.0", "", {}, "sha512-4sLnVHbG6dXVn0EqZIEm1fC0MCrpFx5Vn60FzRpw4nDzF6kV9wU4Iq/XaBqipWUlGB40XE4djvVoAATvu6q78Q=="],
-
-    "babylonjs-loaders/babylonjs": ["babylonjs@9.21.2", "", {}, "sha512-49B14bmmZdtAwscLMoxBoajqo14cnnmYVRhvDqGTxEDxbze5ChnJTKgmGJfbaG+AyzTa0i3RNAc1qOSdp6c3+Q=="],
-
-    "babylonjs-materials/babylonjs": ["babylonjs@9.26.2", "", {}, "sha512-UPvVLHT/6lus8j3gqrghhImfKXG2IPBaqBlmOJYWj6oTqVb/yZ/8MYh3+yHdX6Gl7oNvJvcyRrenm2K6xzOT2g=="],
-
-    "babylonjs-post-process/babylonjs": ["babylonjs@9.21.2", "", {}, "sha512-49B14bmmZdtAwscLMoxBoajqo14cnnmYVRhvDqGTxEDxbze5ChnJTKgmGJfbaG+AyzTa0i3RNAc1qOSdp6c3+Q=="],
-
-    "babylonjs-serializers/babylonjs": ["babylonjs@9.22.1", "", {}, "sha512-OI0wYurHav8dhE5KzHrvVflGDpp4JMup8jJlBcAUS8in7hlZO6BTv7b49HchlO/Nk4P0wFZs3bcbSSZhSfXu+g=="],
-
-    "babylonjs-serializers/babylonjs-gltf2interface": ["babylonjs-gltf2interface@9.22.1", "", {}, "sha512-RfOiN+gTHOlf7Uj+HHZM9jqFnofo4sAUPyEe69A9UHw6794b4ySHYb59K+wW8Id6QN7jkPWNTg7Up1WYArtzOg=="],
+    "undici-types": ["undici-types@8.9.0", "", {}, "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="],
   }
 }
