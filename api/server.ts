@@ -26,8 +26,8 @@ class ClientData {
 const clients: Client[] = [] 
 const nameList: string[] = []
 console.log("server file reached")
-const HOST_NAME = "mpfishinggame-server.vercel.app"
-const PORT = 2323
+// const HOST_NAME = "mpfishinggame-server.vercel.app"
+// const PORT = 2323
 const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/"//"./shared/textures/"
 const chatHistory: ChatMessage[] = []
 
