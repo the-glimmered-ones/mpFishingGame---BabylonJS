@@ -2,10 +2,10 @@
   "name": "mpFishingGame",
   "version": "1.0.50",
   "scripts": {
-    "dev": "bun run --watch server/src/server.ts",
+    "dev": "bun run --watch server.ts",
     "build": "bun run build.js"
   },
-  "main": "server/src/index.ts",
+  "main": "server.ts",
   "files": ["shared/", "shared/textures/"],
   "dependencies": {
     "babylonjs": "^9.32.0",
