@@ -764,7 +764,7 @@ var init_game = __esm(() => {
 // client/src/index.ts
 init_Consts();
 init_PacketTypes();
-var ws2 = new WebSocket("ws://localhost:2323");
+var ws2 = new WebSocket("wss://mpfishinggame-server.vercel.app");
 var gameFrameWindow;
 var gameModule = await Promise.resolve().then(() => (init_game(), {}));
 addEventListener("load", async () => {
