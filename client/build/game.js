@@ -44,7 +44,6 @@ var BOAT_Y_POSITION;
 var BOAT_SCALE;
 var BOAT_STARTING_ROTATION;
 function linkWsToGame(frame, webSocket) {
-  ws.close();
   ws = webSocket;
   canvas = iframe.window.document.body.children[0];
   iframe = frame;

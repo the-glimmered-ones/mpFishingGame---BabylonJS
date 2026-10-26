@@ -143,7 +143,6 @@ var init_PacketTypes = () => {};
 
 // client/src/game.ts
 function linkWsToGame(frame, webSocket) {
-  ws.close();
   ws = webSocket;
   canvas = iframe.window.document.body.children[0];
   iframe = frame;

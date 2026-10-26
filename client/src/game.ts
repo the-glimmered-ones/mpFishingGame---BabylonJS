@@ -19,7 +19,6 @@ let BOAT_Y_POSITION: number;
 let BOAT_SCALE: BABYLON.Vector3;
 let BOAT_STARTING_ROTATION: BABYLON.Vector3;
 export function linkWsToGame(frame: Window, webSocket: WebSocket){
-  ws.close()
   ws = webSocket
   canvas = <HTMLCanvasElement>(iframe.window.document.body.children[0])
   //console.log(frame.window.document.body.children)
