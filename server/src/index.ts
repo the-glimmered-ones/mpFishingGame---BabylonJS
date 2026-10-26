@@ -45,7 +45,6 @@ async function serveRes(url: string, subfolder: string = ""){
 }
 
 Bun.serve({
-    port: PORT,
     hostname: HOST_NAME,
     routes: {
         "/": page,
