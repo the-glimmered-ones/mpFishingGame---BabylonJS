@@ -27,7 +27,7 @@ const clients: Client[] = []
 const nameList: string[] = []
 console.log("server file reached")
 const HOST_NAME = "https://mpfishinggame-server.vercel.app"
-const PORT = 2323
+const PORT = 0
 const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/"//"./shared/textures/"
 const chatHistory: ChatMessage[] = []
 
