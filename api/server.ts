@@ -1,10 +1,232 @@
+import { ShipTypes, PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts";
+import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
+import page from "@build/index.html"
+import { readdir } from "node:fs/promises";
+
+
+class Client {
+    ws: any
+    name: string = ""
+    data: ClientData = new ClientData([0,0], 0.0, 0.0, ShipTypes.NONE)
+}
+
+class ClientData {
+    pos: number[] = [0,0]
+    angle: number = 0.0
+    velocity: number = 0.0
+    shipType: ShipTypes = ShipTypes.NONE
+    constructor(pos: number[], angle: number, velocity: number, shipType: ShipTypes){
+        this.pos = pos;
+        this.angle = angle;
+        this.velocity = velocity;
+        this.shipType = shipType;
+    }
+}
+
+const clients: Client[] = [] 
+const nameList: string[] = []
+console.log("server file reached")
+// const HOST_NAME = "mpfishinggame-server.vercel.app"
+// const PORT = 2323
+const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/"//"./shared/textures/"
+const chatHistory: ChatMessage[] = []
+
+async function serveRes(url: string, subfolder: string = ""){
+    let filePath = url.slice(url.indexOf("/textures/" + subfolder) + ("/textures/" + subfolder).length)
+    //console.log(url, filePath)
+    const foundTexture = (await readdir(TEXTURE_PATH + subfolder, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
+    //console.log(foundTexture)
+    if (foundTexture){
+        return new Response(Bun.file(TEXTURE_PATH + subfolder + filePath))
+    }
+    else{
+        return new Response("404 not found")
+    }
+}
+
 Bun.serve({
-  fetch(request) {
-    const url = new URL(request.url);
- 
-    return Response.json({
-      message: 'Hello from Bun on Vercel',
-      pathname: url.pathname,
-    });
-  },
-});
+    // port: PORT,
+    // hostname: HOST_NAME,
+    routes: {
+        "/": page,
+        "/hi": new Response ("uck")
+        // "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
+        // "/textures/TropicalSunnyDay/*": ({url}) => {return serveRes(url, "TropicalSunnyDay/")},
+        // "/textures/*": ({url}) => {return serveRes(url)},
+    },
+    async fetch(req, server) {
+        // upgrade the request to a WebSocket
+        if (server.upgrade(req, { data: { client: new Client() } })) {
+            console.log("ugraded")
+            return; // do not return a Response
+        }
+        return new Response("Upgrade failed", { status: 500 });
+    },
+    error(error) {
+        return new Response(`Error: ${error.message}`, { status: 404 });
+    },
+  websocket: {
+    data: {} as { client: Client },
+    open: (ws) => {
+            console.log(clients.length)
+            //TODO: only add clients when sure its not just gonna disappear, after name submit? set a timeout?
+            if (ws.data){ //DISABLED DUPE REPLACEMENT FOR LOCAL TESTING
+                 ws.data.client.ws = ws
+            //     var dupedClient: Client = new Client();
+            //     if (clients.find((client) => { dupedClient = client; return ws.remoteAddress == client.ws.remoteAddress; })){
+            //         clients[clients.indexOf(dupedClient)] =  ws.data.client
+            //         nameList[clients.indexOf(dupedClient)] = ws.data.client.name
+            //         console.log("user replaced")
+            //     }
+            //     else{
+                    clients.push(ws.data.client)
+                    nameList.push(ws.data.client.name)
+                    console.log("user connect")
+                //}
+                console.log(clients.length)
+                ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_START_POSITIONS, lastPosUpdate)))
+            }
+            
+            
+            
+            //console.log(clients)
+        },
+        close(ws) {
+            console.log(clients.length)
+            console.log("user disconnect")
+            for (let i = 0; i < clients.length; i++){
+                if (clients[i].name != "" && clients[i].name == ws.data.client.name) {
+                    nameList.splice(nameList.indexOf(clients[i].name), 1)
+                    clients.splice(i, 1)
+                }
+            }
+            if (ws.data.client.name != ""){
+                for (let i = 0; i < clients.length; i++){
+                    clients[i].ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_LEFT_EXPERIENCE, ws.data.client.name)))
+                }
+            }
+        },
+        message(ws, message: string){
+            var msg: ClientPacket = JSON.parse(message)// msg = {packetType, everything else}
+            //console.log(msg)
+            //console.log("msg recieved")
+            switch(msg.packetType){
+
+            case ClientPacketTypes.NONE:
+                break;
+
+            case ClientPacketTypes.JOIN_WITH_NAME:
+                const name = msg.data.name
+                const shipType = msg.data.type
+                if (name == ""){//TODO also put a character limit here
+                    console.log("invalid name")
+                    ws.send(JSON.stringify(
+                        new ServerPacket(ServerPacketTypes.INVALID_NAME_DETECTED)))
+                    break;
+                }
+                if(nameList.includes(name)){
+                    ws.send(JSON.stringify(
+                        new ServerPacket(ServerPacketTypes.DUPLICATE_NAME_DETECTED)))
+                    console.log("dupe name")
+                    break;
+                }
+                else{
+                    //console.log("not a dupe")
+                    for (let i = 0; i < clients.length; i++){
+                        const client = clients[i]
+                        if (client.ws == ws){
+                            //console.log("found id")
+                            ws.data.client.name = name
+                            client.name = name
+                            console.log(`accepted ${client.name}`)
+                            nameList[i] = client.name
+                            client.data.shipType = shipType
+                            //console.log(client)
+                            ws.send(JSON.stringify(
+                                new ServerPacket(ServerPacketTypes.JOIN_ACCEPTED)))
+                            //add new ship to all clients
+                            for (let client of clients){
+                                client.ws.send(JSON.stringify(
+                                new ServerPacket(
+                                    ServerPacketTypes.PLAYER_START_POSITIONS,
+                                    [new GlobalClientLocation( 
+                                        client.data.pos, 
+                                        client.data.angle, 
+                                        client.data.shipType, 
+                                        client.name
+                                    )]
+                                )))
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+
+            case ClientPacketTypes.PLAYER_POSITION_UPDATE:
+                for (let i = 0; i < clients.length; i++){
+                    if (clients[i].name == ws.data.client.name){
+                        let location: PlayerLocation = msg.data
+                        clients[i].data.pos = location.position
+                        clients[i].data.angle = location.angle
+                        clients[i].data.velocity = location.velocity
+                        break;
+                    }
+                }
+
+                break;
+            case ClientPacketTypes.SEND_CHAT:
+                //TODO censor chat w that one library, push to list, then send out to all clients
+                //msg time should be handled server-side
+                const { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } = require('obscenity');
+                var chatMessage: ChatMessage = msg.data
+                const censor = new TextCensor()
+                const matcher = new RegExpMatcher({
+                    ...englishDataset.build(),
+                    ...englishRecommendedTransformers,
+                })
+                const matches = matcher.getAllMatches(chatMessage.msg)
+                chatMessage = new ChatMessage(chatMessage.name, censor.applyTo(chatMessage.msg, matches))
+                console.log(`<${chatMessage.time[0]}:${chatMessage.time[1]}> ${chatMessage.name}: ${chatMessage.msg}`)
+                chatHistory.push(chatMessage)
+                for (let client of clients){
+                    //if (client.ws.remoteAddress != ws.remoteAddress){
+                    client.ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.INCOMING_CHAT_MESSAGE, chatMessage)))
+                    //}
+                }
+                break
+            }
+        }
+
+  }, // handlers
+})
+
+setInterval(serverTick, 15)
+
+const lastPosUpdate: GlobalClientLocation[] = []
+async function serverTick(){
+    if (nameList.length > 0){
+        //TODO: send out all ship info to every player, even unnamed ones
+        //should include position, angle, type, name
+        const globalClientLocations: GlobalClientLocation[] = []
+        lastPosUpdate.splice(0)
+        for (let client of clients){
+            if (client.name != ""){
+                const pos = new GlobalClientLocation(
+                    client.data.pos,
+                    client.data.angle,
+                    client.data.shipType,
+                    client.name
+                )
+                globalClientLocations.push(pos)
+                lastPosUpdate.push(pos)
+            }
+        }
+        for (let client of clients){
+            client.ws.send(JSON.stringify(new ServerPacket(
+                ServerPacketTypes.UPDATE_GLOBAL_PLAYER_POSITIONS, 
+                globalClientLocations
+            )))
+        }
+    }
+}
