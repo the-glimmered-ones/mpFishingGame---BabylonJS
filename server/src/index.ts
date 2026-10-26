@@ -26,8 +26,8 @@ class ClientData {
 const clients: Client[] = [] 
 const nameList: string[] = []
 console.log("server file reached")
-const HOST_NAME = "https://mpfishinggame-server.vercel.app"
-const PORT = 0
+const HOST_NAME = "mpfishinggame-server.vercel.app"
+const PORT = 2323
 const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/"//"./shared/textures/"
 const chatHistory: ChatMessage[] = []
 
@@ -45,7 +45,8 @@ async function serveRes(url: string, subfolder: string = ""){
 }
 
 Bun.serve({
-    hostname: HOST_NAME,
+    // port: PORT,
+    // hostname: HOST_NAME,
     routes: {
         "/": page,
         // "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
