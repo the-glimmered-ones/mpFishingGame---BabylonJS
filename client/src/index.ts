@@ -3,7 +3,7 @@ import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from
 
 //export const ws: WebSocket = new WebSocket("ws://localhost:2323")
 //export const ws: WebSocket = new WebSocket("https://mpfishinggame-server.vercel.app")
-export const ws: WebSocket = new WebSocket("https://babylonjs-boat-game.vercel.app/")
+export const ws: WebSocket = new WebSocket("https://mpfishinggame-babylonjs.onrender.com/")
 
 var gameFrameWindow: Window
 const gameModule = await import("./game.js")
