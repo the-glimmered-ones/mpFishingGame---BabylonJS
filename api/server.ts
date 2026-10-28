@@ -49,10 +49,10 @@ Bun.serve({
     // hostname: HOST_NAME,
     routes: {
         "/": page,
-        "/hi": new Response ("uck")
-        // "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
-        // "/textures/TropicalSunnyDay/*": ({url}) => {return serveRes(url, "TropicalSunnyDay/")},
-        // "/textures/*": ({url}) => {return serveRes(url)},
+        "/hi": new Response ("uck"),
+        "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
+        "/textures/TropicalSunnyDay/*": ({url}) => {return serveRes(url, "TropicalSunnyDay/")},
+        "/textures/*": ({url}) => {return serveRes(url)},
     },
     async fetch(req, server) {
         // upgrade the request to a WebSocket
