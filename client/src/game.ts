@@ -376,18 +376,17 @@ class LoadedPlayer {
 }
 const preloadedPlayers: GlobalClientLocation[] = []
 const loadedPlayers: LoadedPlayer[] = []
-export function addOtherBoat(player: GlobalClientLocation){
-  if (!boatMesh) { preloadedPlayers.push(player); return;}
-  if (player.name == name) {return;}
+export function addOtherBoat(data: GlobalClientLocation){
+  if (!boatMesh) { preloadedPlayers.push(data); return;}
   if (!gameLoaded) {console.log("not loaded"); return;}
-  //if (!loadedPlayers.find(({name}) => {return player.name == name})){
-    const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${player.name}BoatInstance`)//TODO instance of different mesh depending on ship type
-    mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1])
-    mesh.rotation = new BABYLON.Vector3(0, player.angle, 0)
+  if (loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name}) === undefined){
+    const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${data.name}BoatInstance`)//TODO instance of different mesh depending on ship type
+    mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
+    mesh.rotation = new BABYLON.Vector3(0, data.angle, 0)
     mesh.parent = null
-    loadedPlayers.push(new LoadedPlayer(player.name, mesh))
+    loadedPlayers.push(new LoadedPlayer(data.name, mesh))
     scene.addMesh(mesh)
-    //const transform = addBoat(mesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0))
+  }
 }
 
 function addPreloadedPlayers(){
@@ -398,7 +397,7 @@ function addPreloadedPlayers(){
 }
 
 export function updateExistingPlayerLocation(data: GlobalClientLocation){
-  const player = loadedPlayers.find(({name}) => {return `${data.name}BoatInstance` == name})
+  const player = loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name})
   console.log("players: ", loadedPlayers)
   if (!gameLoaded) {return;}
   if (player){
@@ -407,7 +406,7 @@ export function updateExistingPlayerLocation(data: GlobalClientLocation){
     //console.log(`${player.name} moved to ${player.mesh.position}`)
   }
   else{
-    addOtherBoat(data)
+    if (data.name != name){ addOtherBoat(data) }
   }
 }
 
