@@ -224,6 +224,7 @@ function setupUI(){
   newChatPopup.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
   newChatPopup.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
   newChatPopup.style.position = "absolute"
+  newChatPopup.style.visibility = "hidden"
   newChatPopup.style.width = chatBox.style.width
   body.appendChild(newChatPopup)
 
