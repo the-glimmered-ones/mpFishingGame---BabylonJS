@@ -35,7 +35,7 @@ async function serveRes(url: string, subfolder: string = ""){
     let filePath = url.slice(url.indexOf("/textures/" + subfolder) + ("/textures/" + subfolder).length)
     console.log(url, filePath)
     //const foundTexture = (await readdir(TEXTURE_PATH + subfolder, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
-    const foundTexture = (TEXTURE_PATH + subfolder + filePath)
+    const foundTexture = new URL(TEXTURE_PATH + subfolder + filePath)
     console.log(foundTexture)
     if (foundTexture){
         return new Response(Bun.file(TEXTURE_PATH + subfolder + filePath))
