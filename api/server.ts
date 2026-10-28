@@ -36,7 +36,7 @@ async function serveRes(url: string, subfolder: string = ""){
     console.log(url, filePath)
     //const foundTexture = (await readdir(TEXTURE_PATH + subfolder, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
     const foundTexture = new URL(TEXTURE_PATH + subfolder + filePath)
-    console.log(foundTexture)
+    //console.log(foundTexture)
     if (foundTexture){
         return new Response(await (await Bun.fetch(foundTexture)).blob())
     }
