@@ -224,10 +224,12 @@ function setupUI(){
   chatBox.addEventListener("mouseenter", () => {
     chatDisplay.scroll(0, chatDisplay.scrollHeight)
     chatDisplay.style.visibility = "visible"
+    newChatPopup.style.visibility = "hidden"
   }, {"capture": true})
 
   chatDisplay.addEventListener("mouseover", () => {
     chatDisplay.style.visibility = "visible"
+    newChatPopup.style.visibility = "hidden"
   }, {"capture": true})
 
   ui_chat_table.addEventListener("mouseleave", () => {
@@ -249,19 +251,13 @@ function setupUI(){
   }, {"capture": true})
 }
 
-function sendChat(msg: string){
-  if (msg == "") { return; }
-  const message = new ChatMessage(name, msg)
-  chatHistory.push(message)
-  var hours = (new Date().getHours().toString().length == 1) ? ("0" + new Date().getHours().toString()) : (new Date().getHours().toString())
-  var minutes = (new Date().getMinutes().toString().length == 1) ? ("0" + new Date().getMinutes().toString()) : (new Date().getMinutes().toString())
+function updateChatDisplay(name: string, sent: string[], message: string) {
   const newMsgHtml = `<p style="padding:3px; margin: 0; border: 1px solid lightGray; font-size: small">
-  <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${hours}:${minutes}</span>
-  <br>${msg}
+  <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${sent[0]}:${sent[1]}</span>
+  <br>${message}
   </p>`
   chatDisplay.innerHTML += newMsgHtml
   newChatPopup.innerHTML = newMsgHtml
-  chatDisplay.scroll(0, chatDisplay.scrollHeight)
 
   if (chatDisplay.style.visibility == "hidden"){
     newChatPopup.style.visibility = "visible"
@@ -270,6 +266,16 @@ function sendChat(msg: string){
       newChatPopup.style.visibility = "hidden"
     }, 2000)
   }
+}
+
+function sendChat(msg: string){
+  if (msg == "") { return; }
+  const message = new ChatMessage(name, msg)
+  chatHistory.push(message)
+  var hours = (new Date().getHours().toString().length == 1) ? ("0" + new Date().getHours().toString()) : (new Date().getHours().toString())
+  var minutes = (new Date().getMinutes().toString().length == 1) ? ("0" + new Date().getMinutes().toString()) : (new Date().getMinutes().toString())
+  chatDisplay.scroll(0, chatDisplay.scrollHeight)
+  updateChatDisplay(name, [hours, minutes], msg)
 
   ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.SEND_CHAT, message)))
 }
@@ -277,10 +283,7 @@ function sendChat(msg: string){
 export function displayInboundChat(message: ChatMessage){
   if (message.name != name){
     chatHistory.push(message)
-    chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
-    <span id="name" style="font-weight: bold; text-decoration: underline;">${message.name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${message.time[0]}:${message.time[1]}</span>
-    <br>${message.msg}
-    </p>`
+    updateChatDisplay(message.name, [message.time[0].toString(), message.time[1].toString()], message.msg)
   }
 }
 
