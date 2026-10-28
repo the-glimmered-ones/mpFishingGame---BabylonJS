@@ -286,8 +286,8 @@ function sendChat(msg: string){
   chatHistory.push(message)
   var hours = (new Date().getHours().toString().length == 1) ? ("0" + new Date().getHours().toString()) : (new Date().getHours().toString())
   var minutes = (new Date().getMinutes().toString().length == 1) ? ("0" + new Date().getMinutes().toString()) : (new Date().getMinutes().toString())
-  chatDisplay.scroll(0, chatDisplay.scrollHeight)
   updateChatDisplay(name, [hours, minutes], msg)
+  chatDisplay.scroll(0, chatDisplay.scrollHeight)
 
   ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.SEND_CHAT, message)))
 }
