@@ -398,7 +398,7 @@ function addPreloadedPlayers(){
 }
 
 export function updateExistingPlayerLocation(data: GlobalClientLocation){
-  const player = loadedPlayers.find(({name}) => {return data.name == name})
+  const player = loadedPlayers.find(({name}) => {return `${data.name}BoatInstance` == name})
   console.log("players: ", loadedPlayers)
   if (!gameLoaded) {return;}
   if (player){
