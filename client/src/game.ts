@@ -249,7 +249,7 @@ function sendChat(msg: string){
   chatHistory.push(message)
   var hours = (new Date().getHours().toString().length == 1) ? ("0" + new Date().getHours().toString()) : (new Date().getHours().toString())
   var minutes = (new Date().getMinutes().toString().length == 1) ? ("0" + new Date().getMinutes().toString()) : (new Date().getMinutes().toString())
-  chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
+  chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray; font-size: small">
   <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${hours}:${minutes}</span>
   <br>${msg}
   </p>`
