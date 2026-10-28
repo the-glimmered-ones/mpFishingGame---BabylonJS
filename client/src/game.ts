@@ -683,19 +683,19 @@ function addKeyListeners(){
     const key = event.key
     //console.log(gameLoaded, joinedWithName)
     if (joinedWithName){
-      if(key == "a"){
+      if(key == "a" || key == "ArrowLeft"){
         actionParams[0] = "W";
       }
-      else if(key == "d"){
+      else if(key == "d" || key == "ArrowRight"){
         actionParams[0] = "E";
       }
       else{
         actionParams[0] = "";
       }
-      if(key === "w"){
+      if(key === "w" || key == "ArrowUp"){
         actionParams[1] = "N";
       }
-      else if(key == "s"){
+      else if(key == "s" || key == "ArrowDown"){
         actionParams[1] = "S";
       }
       else{
@@ -707,25 +707,25 @@ function addKeyListeners(){
       }
       //console.log(actionParams, pressedMoveKeys)
 
-      let oceanPivot = <BABYLON.TransformNode> scene.getNodeByName("ocean-camera-pivot")
-      if (key == "ArrowLeft"){
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z)
-      }
-      else if (key == "ArrowRight"){
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x + 5, shipCamera.position.y, shipCamera.position.z)
-      }
-      else if (key == ","){
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y - 5, oceanPivot.position.z)
-      }
-      else if (key == "."){
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y + 5, oceanPivot.position.z)
-      }
-      else if (key == "ArrowUp"){
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x + 1, oceanPivot.position.y, oceanPivot.position.z)
-      }
-      else if (key == "ArrowDown"){
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x - 1, oceanPivot.position.y, oceanPivot.position.z)
-      }
+      // let oceanPivot = <BABYLON.TransformNode> scene.getNodeByName("ocean-camera-pivot")
+      // if (key == "ArrowLeft"){
+      //   shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z)
+      // }
+      // else if (key == "ArrowRight"){
+      //   shipCamera.position = new BABYLON.Vector3(shipCamera.position.x + 5, shipCamera.position.y, shipCamera.position.z)
+      // }
+      // else if (key == ","){
+      //   oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y - 5, oceanPivot.position.z)
+      // }
+      // else if (key == "."){
+      //   oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y + 5, oceanPivot.position.z)
+      // }
+      // else if (key == "ArrowUp"){
+      //   oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x + 1, oceanPivot.position.y, oceanPivot.position.z)
+      // }
+      // else if (key == "ArrowDown"){
+      //   oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x - 1, oceanPivot.position.y, oceanPivot.position.z)
+      // }
     }
   })
 
@@ -764,7 +764,8 @@ async function queueClientAction(){
     let moveKeysPressed: boolean = false;
     velocity = Math.round(velocity*1000)/1000
     if (velocity != 0){
-      if (pressedMoveKeys.includes("w") || pressedMoveKeys.includes("s") || pressedMoveKeys.includes("d") || pressedMoveKeys.includes("a")){//not moving, decelerate
+      if (pressedMoveKeys.includes("w") || pressedMoveKeys.includes("s") || pressedMoveKeys.includes("d") || pressedMoveKeys.includes("a") || 
+        pressedMoveKeys.includes("ArrowUp") || pressedMoveKeys.includes("ArrowDown") || pressedMoveKeys.includes("ArrowRight") || pressedMoveKeys.includes("ArrowLeft")){//not moving, decelerate
         moveKeysPressed = true
         //console.log("move keys pressed " + pressedMoveKeys)
       }
