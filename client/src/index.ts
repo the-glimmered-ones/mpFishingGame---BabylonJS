@@ -144,7 +144,7 @@ ws.addEventListener("message", (event) => {
             const posList: GlobalClientLocation[] = msg.data
             if (gameModule && gameFrameWindow){
                 for (let player of posList){
-                    if (player.name != name){
+                    if (player.name != name && player.name != ""){
                         gameModule.addOtherBoat.call(gameFrameWindow, player)
                         console.log(`${player.name} boat added`)
                     }
