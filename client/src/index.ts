@@ -171,6 +171,6 @@ ws.addEventListener("message", (event) => {
             console.log("fail")
     }
 })
-ws.addEventListener("close", (event) => {
+ws.addEventListener("close", () => {
     window.location.reload()
 })
