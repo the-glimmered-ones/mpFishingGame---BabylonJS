@@ -385,10 +385,9 @@ export function addOtherBoat(player: GlobalClientLocation){
     mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1])
     mesh.rotation = new BABYLON.Vector3(0, player.angle, 0)
     mesh.parent = null
-    mesh.collisionMask = 2
+    loadedPlayers.push(new LoadedPlayer(player.name, mesh))
     scene.addMesh(mesh)
     //const transform = addBoat(mesh, new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]), BOAT_SCALE, new BABYLON.Vector3(0, player.angle, 0))
-    loadedPlayers.push(new LoadedPlayer(player.name, mesh))
 }
 
 function addPreloadedPlayers(){
