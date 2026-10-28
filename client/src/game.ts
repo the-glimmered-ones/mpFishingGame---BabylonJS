@@ -216,12 +216,15 @@ function setupUI(){
   chatDisplay.style.visibility = "hidden"
   body.appendChild(chatDisplay)
   newChatPopup = document.createElement("div")
-  newChatPopup.style = chatDisplay.style.toString()
+  chatDisplay.style.backgroundColor = "antiqueWhite"
+  chatDisplay.style.border = "1px solid black"
   newChatPopup.style.overflowY = "auto"
   newChatPopup.style.maxHeight = "stretch"
   newChatPopup.id = "new-chat-popup"
   newChatPopup.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
   newChatPopup.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  newChatPopup.style.position = "absolute"
+  newChatPopup.style.width = chatBox.style.width
   body.appendChild(newChatPopup)
 
   chatBox.addEventListener("mouseenter", () => {
