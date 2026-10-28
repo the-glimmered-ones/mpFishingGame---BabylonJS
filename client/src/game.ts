@@ -37,6 +37,8 @@ export function setJoinedWithName(joinName: string){
   setInterval(queueClientAction, 10)
 }
 
+var ground: BABYLON.GroundMesh
+var waterMesh: BABYLON.GroundMesh
 function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var scene: BABYLON.Scene = new BABYLON.Scene(engine);
     //console.log("scene created")
@@ -61,11 +63,11 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
     groundMaterial.diffuseTexture = new BABYLON.Texture("textures/ground.jpg", scene);
     groundMaterial.diffuseTexture.scale(4);
-    var ground = BABYLON.CreateGround("ground", { width: 512, height: 512, subdivisions: 32}, scene);
+    ground = BABYLON.CreateGround("ground", { width: 512, height: 512, subdivisions: 32}, scene);
     ground.position.y = -1;
     ground.material = groundMaterial;
 
-    var waterMesh = BABYLON.CreateGround("waterMesh", { width: 512, height: 512, subdivisions: 32}, scene);
+    waterMesh = BABYLON.CreateGround("waterMesh", { width: 512, height: 512, subdivisions: 32}, scene);
     var water = new BABYLON.WaterMaterial("water", scene);
     water.bumpTexture = new BABYLON.Texture("textures/waterbump.png", scene);
     water.windForce = 15;
@@ -795,6 +797,8 @@ async function queueClientAction(){
       //oceanCamera.position = (<BABYLON.TransformNode>oceanCamera.parent).position
       oceanCamera.target = (<BABYLON.TransformNode> scene.getNodeByName("camera-target")).position
     }
+    ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
+    waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
 
     updateVisibleChatHistory()
   }
