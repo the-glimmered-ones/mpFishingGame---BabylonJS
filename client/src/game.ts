@@ -216,6 +216,9 @@ function setupUI(){
   chatDisplay.style.visibility = "hidden"
   body.appendChild(chatDisplay)
   newChatPopup = chatDisplay
+  newChatPopup.style.overflowY = "auto"
+  newChatPopup.style.maxHeight = "stretch"
+  body.appendChild(newChatPopup)
 
   chatBox.addEventListener("mouseenter", () => {
     chatDisplay.scroll(0, chatDisplay.scrollHeight)
@@ -262,7 +265,7 @@ function sendChat(msg: string){
   if (chatDisplay.style.visibility == "hidden"){
     newChatPopup.style.visibility = "visible"
   }
-  
+
   ws.send(JSON.stringify(new ClientPacket(ClientPacketTypes.SEND_CHAT, message)))
 }
 
