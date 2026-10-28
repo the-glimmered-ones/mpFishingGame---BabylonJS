@@ -229,7 +229,12 @@ function setupUI(){
 
   chatBox.addEventListener("mouseenter", () => {
     chatDisplay.scroll(0, chatDisplay.scrollHeight)
-    chatDisplay.style.visibility = "visible"
+    if (chatHistory.length > 0){
+      chatDisplay.style.visibility = "visible"
+    }
+    else {
+      chatDisplay.style.visibility = "hidden"
+    }
     newChatPopup.style.visibility = "hidden"
   }, {"capture": true})
 
