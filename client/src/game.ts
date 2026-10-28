@@ -278,7 +278,7 @@ function updateChatDisplay(name: string, sent: string[], message: string) {
 
   if (chatDisplay.style.visibility == "hidden"){
     newChatPopup.style.visibility = "visible"
-    window.clearTimeout()
+    window.clearTimeout()//TODO ???
     setTimeout(() => {
       newChatPopup.innerHTML = ""
       newChatPopup.style.visibility = "hidden"
