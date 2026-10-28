@@ -378,8 +378,7 @@ const preloadedPlayers: GlobalClientLocation[] = []
 const loadedPlayers: LoadedPlayer[] = []
 export function addOtherBoat(data: GlobalClientLocation){
   if (!boatMesh) { preloadedPlayers.push(data); return;}
-  if (!gameLoaded) {console.log("not loaded"); return;}
-  if (data.name != "" && loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name}) === undefined){
+  if (loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name}) === undefined){
     const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${data.name}BoatInstance`)//TODO instance of different mesh depending on ship type
     mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
     mesh.rotation = new BABYLON.Vector3(0, data.angle, 0)
@@ -399,14 +398,13 @@ function addPreloadedPlayers(){
 export function updateExistingPlayerLocation(data: GlobalClientLocation){
   const player = loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name})
   console.log("players: ", loadedPlayers)
-  if (!gameLoaded) {return;}
   if (player){
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
     player.mesh.rotation = new BABYLON.Vector3(0,data.angle,0)
     //console.log(`${player.name} moved to ${player.mesh.position}`)
   }
   else{
-    if (data.name != name){ addOtherBoat(data) }
+    addOtherBoat(data)
   }
 }
 

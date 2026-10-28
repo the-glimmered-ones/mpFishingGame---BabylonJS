@@ -155,8 +155,8 @@ ws.addEventListener("message", (event) => {
              const playerPositions: GlobalClientLocation[] = msg.data
              if (gameModule){
                 for (let player of playerPositions){
-                    if (player.name != name){
-                        //console.log(`${player.name} pos updated`)
+                    if (player.name != name && player.name != ""){
+                        console.log(`${player.name} pos updated`)
                         gameModule.updateExistingPlayerLocation(player)
                     }
                 }
