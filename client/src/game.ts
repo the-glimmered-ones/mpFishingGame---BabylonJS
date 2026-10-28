@@ -220,6 +220,8 @@ function setupUI(){
   newChatPopup.style.overflowY = "auto"
   newChatPopup.style.maxHeight = "stretch"
   newChatPopup.id = "new-chat-popup"
+  newChatPopup.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
+  newChatPopup.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
   body.appendChild(newChatPopup)
 
   chatBox.addEventListener("mouseenter", () => {
