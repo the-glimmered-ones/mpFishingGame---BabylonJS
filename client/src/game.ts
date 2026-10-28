@@ -215,6 +215,7 @@ function setupUI(){
   chatDisplay.style.overflowWrap = "anywhere"
   chatDisplay.style.visibility = "hidden"
   body.appendChild(chatDisplay)
+  newChatPopup = document.createElement("div")
   newChatPopup = chatDisplay
   newChatPopup.style.overflowY = "auto"
   newChatPopup.style.maxHeight = "stretch"
