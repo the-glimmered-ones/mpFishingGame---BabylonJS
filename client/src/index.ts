@@ -2,7 +2,6 @@ import { ChatMessage, GlobalClientLocation, ShipTypes } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 
 //export const ws: WebSocket = new WebSocket("ws://localhost:2323")
-//export const ws: WebSocket = new WebSocket("https://mpfishinggame-server.vercel.app")
 export const ws: WebSocket = new WebSocket("https://mpfishinggame-babylonjs.onrender.com/")
 
 var gameFrameWindow: Window
@@ -172,5 +171,6 @@ ws.addEventListener("message", (event) => {
             console.log("fail")
     }
 })
-
-
+ws.addEventListener("close", (event) => {
+    window.location.reload()
+})
