@@ -34,6 +34,7 @@ export function setJoinedWithName(joinName: string){
   //console.log("set true")
   joinedWithName = true
   name = joinName
+  canvas.focus()
   setInterval(queueClientAction, 10)
 }
 
