@@ -560,6 +560,7 @@ function setupGizmos(){
     }
     if (finalY != y){
       gaffMovementGizmo.dragBehavior.releaseDrag()
+      gaff.position.y = finalY
     }
   });
 
