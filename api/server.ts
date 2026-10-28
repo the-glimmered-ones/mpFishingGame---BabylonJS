@@ -28,14 +28,14 @@ const nameList: string[] = []
 console.log("server file reached")
 // const HOST_NAME = "localhost"
 // const PORT = 2323
-const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/"//"./shared/textures/"
+const TEXTURE_PATH = "https://iysdfde90h9fym8u.public.blob.vercel-storage.com/textures/"//"./shared/textures/"
 const chatHistory: ChatMessage[] = []
 
 async function serveRes(url: string, subfolder: string = ""){
     let filePath = url.slice(url.indexOf("/textures/" + subfolder) + ("/textures/" + subfolder).length)
     console.log(url, filePath)
     //const foundTexture = (await readdir(TEXTURE_PATH + subfolder, {withFileTypes: true})).find((texture) => { return texture.name == filePath}) //doesn't work for subfolders
-    const foundTexture = (TEXTURE_PATH + filePath)
+    const foundTexture = (TEXTURE_PATH + subfolder + filePath)
     console.log(foundTexture)
     if (foundTexture){
         return new Response(Bun.file(TEXTURE_PATH + subfolder + filePath))
