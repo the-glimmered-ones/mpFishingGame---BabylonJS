@@ -381,7 +381,8 @@ const loadedPlayers: LoadedPlayer[] = []
 export function addOtherBoat(data: GlobalClientLocation){
   if (!boatMesh) { preloadedPlayers.push(data); return;}
   if (loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name}) === undefined){
-    const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${data.name}BoatInstance`)//TODO instance of different mesh depending on ship type
+    //TODO instance of different mesh depending on ship type
+    const mesh: BABYLON.InstancedMesh = boatMesh.createInstance(`${data.name}BoatInstance`)
     mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
     mesh.rotation = new BABYLON.Vector3(0, data.angle, 0)
     mesh.parent = null
@@ -797,8 +798,9 @@ async function queueClientAction(){
       //oceanCamera.position = (<BABYLON.TransformNode>oceanCamera.parent).position
       oceanCamera.target = (<BABYLON.TransformNode> scene.getNodeByName("camera-target")).position
     }
-    ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
-    waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
+    // ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
+    // waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
+    //doesnt even look like u move
 
     updateVisibleChatHistory()
   }
