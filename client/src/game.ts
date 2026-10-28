@@ -395,6 +395,7 @@ function addPreloadedPlayers(){
   for (let player of preloadedPlayers){
     addOtherBoat(player)
   }
+  preloadedPlayers.splice(0)
 }
 
 export function updateExistingPlayerLocation(data: GlobalClientLocation){
@@ -406,6 +407,7 @@ export function updateExistingPlayerLocation(data: GlobalClientLocation){
     //console.log(`${player.name} moved to ${player.mesh.position}`)
   }
   else{
+    console.log(`loaded?: ${gameLoaded}, meshExists?: ${player?.mesh}`)
     addOtherBoat(data)
   }
 }
