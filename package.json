@@ -13,7 +13,8 @@
     "babylonjs-loaders": "^9.32.0",
     "babylonjs-materials": "^9.32.0",
     "babylonjs-post-process": "^9.32.0",
-    "babylonjs-serializers": "^9.32.0"
+    "babylonjs-serializers": "^9.32.0",
+    "obscenity": "^0.4.6"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",

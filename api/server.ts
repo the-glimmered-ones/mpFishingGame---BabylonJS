@@ -2,6 +2,7 @@ import { ShipTypes, PlayerLocation, GlobalClientLocation, ChatMessage } from "@s
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 import page from "@build/index.html"
 import { readdir } from "node:fs/promises";
+import { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } from "obscenity";
 
 
 class Client {
@@ -179,7 +180,7 @@ Bun.serve({
             case ClientPacketTypes.SEND_CHAT:
                 //TODO censor chat w that one library, push to list, then send out to all clients
                 //msg time should be handled server-side
-                const { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } = require('obscenity');
+                // const { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } = require('obscenity');
                 var chatMessage: ChatMessage = msg.data
                 const censor = new TextCensor()
                 const matcher = new RegExpMatcher({
