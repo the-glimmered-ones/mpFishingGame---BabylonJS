@@ -38,7 +38,7 @@ async function serveRes(url: string, subfolder: string = ""){
     const foundTexture = new URL(TEXTURE_PATH + subfolder + filePath)
     console.log(foundTexture)
     if (foundTexture){
-        return new Response(Bun.file(foundTexture))
+        return new Response(await (await Bun.fetch(foundTexture)).blob())
     }
     else{
         return new Response("404 not found")
