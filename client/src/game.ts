@@ -216,8 +216,8 @@ function setupUI(){
   chatDisplay.style.visibility = "hidden"
   body.appendChild(chatDisplay)
   newChatPopup = document.createElement("div")
-  chatDisplay.style.backgroundColor = "antiqueWhite"
-  chatDisplay.style.border = "1px solid black"
+  newChatPopup.style.backgroundColor = "antiqueWhite"
+  newChatPopup.style.border = "1px solid black"
   newChatPopup.style.overflowY = "auto"
   newChatPopup.style.maxHeight = "stretch"
   newChatPopup.id = "new-chat-popup"
