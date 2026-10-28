@@ -440,7 +440,7 @@ async function startGame(){//parent.getWebsocket()){
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
-    scene.debugLayer.show()
+    //scene.debugLayer.show()
     joinedWithName = false
     console.log("scene drawn")
     addKeyListeners()
