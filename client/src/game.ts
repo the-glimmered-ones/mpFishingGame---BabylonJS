@@ -397,11 +397,11 @@ function addPreloadedPlayers(){
 
 export function updateExistingPlayerLocation(data: GlobalClientLocation){
   const player = loadedPlayers.find((loadedPlayer) => {return loadedPlayer.name == data.name})
-  console.log("players: ", loadedPlayers)
+  //console.log("players: ", loadedPlayers)
   if (player){
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1])
     player.mesh.rotation = new BABYLON.Vector3(0,data.angle,0)
-    //console.log(`${player.name} moved to ${player.mesh.position}`)
+    console.log(`${player.name} moved to ${player.mesh.position}`)
   }
   else{
     addOtherBoat(data)

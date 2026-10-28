@@ -156,7 +156,7 @@ ws.addEventListener("message", (event) => {
              if (gameModule){
                 for (let player of playerPositions){
                     if (player.name != name && player.name != ""){
-                        console.log(`${player.name} pos updated`)
+                        //console.log(`${player.name} pos updated`)
                         gameModule.updateExistingPlayerLocation(player)
                     }
                 }
