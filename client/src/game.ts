@@ -116,8 +116,11 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
 return scene;
 }
 
+var chatBox: HTMLInputElement
 var chatDisplay: HTMLDivElement 
 var newChatPopup: HTMLDivElement
+var chatDisplayBottom: string
+var chatDisplayLeft: string
 function setupUI(){
   const body = iframe.document.body
   body.style.flexDirection = "row"
@@ -192,7 +195,7 @@ function setupUI(){
   body.appendChild(ui_chat_table)
 
   const sendChatButton: HTMLButtonElement = <HTMLButtonElement>iframe.document.getElementById("send-chat")
-  const chatBox: HTMLInputElement = <HTMLInputElement>iframe.document.getElementById("chat-box")
+  chatBox = <HTMLInputElement>iframe.document.getElementById("chat-box")
   chatDisplay = iframe.document.createElement("div")
   chatDisplay.id = "chat-display"
   // chatDisplay.innerHTML = `<p style="margin:1px">
@@ -203,11 +206,13 @@ function setupUI(){
   chatDisplay.style.border = "1px solid black"
   chatDisplay.style.width = chatBox.style.width
   chatDisplay.style.position = "absolute"
-  const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))//in px
-  const chatLeft = (chatBox.getBoundingClientRect().x)
+  //const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))//in px
+  //const chatLeft = (chatBox.getBoundingClientRect().x)
+  chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / iframe.document.documentElement.clientHeight) + "vh"
+  chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / iframe.document.documentElement.clientWidth) + "vw"
   //console.log("chat height " + chatHeight.toString() + "px " + (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh")
-  chatDisplay.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
-  chatDisplay.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  chatDisplay.style.bottom = chatDisplayBottom//(Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
+  chatDisplay.style.left = chatDisplayLeft//(Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
   chatDisplay.style.display = "flex"
   chatDisplay.style.flexDirection = "column"
   chatDisplay.style.maxHeight = "30vh"
@@ -221,8 +226,8 @@ function setupUI(){
   newChatPopup.style.overflowY = "auto"
   newChatPopup.style.maxHeight = "stretch"
   newChatPopup.id = "new-chat-popup"
-  newChatPopup.style.bottom = (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
-  newChatPopup.style.left = (Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  newChatPopup.style.bottom = chatDisplayBottom
+  newChatPopup.style.left = chatDisplayLeft
   newChatPopup.style.position = "absolute"
   newChatPopup.style.visibility = "hidden"
   newChatPopup.style.width = chatBox.style.width
@@ -836,7 +841,10 @@ async function queueClientAction(){
     // ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
     // waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
     //doesnt even look like u move
-
     updateVisibleChatHistory()
   }
 }
+window.addEventListener("resize", () => {
+  chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / iframe.document.documentElement.clientHeight) + "vh"
+  chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+})
