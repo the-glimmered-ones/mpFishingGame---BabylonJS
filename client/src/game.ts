@@ -847,4 +847,8 @@ async function queueClientAction(){
 window.addEventListener("resize", () => {
   chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / iframe.document.documentElement.clientHeight) + "vh"
   chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  chatDisplay.style.bottom = chatDisplayBottom
+  chatDisplay.style.left = chatDisplayLeft
+  newChatPopup.style.bottom = chatDisplayBottom
+  newChatPopup.style.left = chatDisplayLeft
 })
