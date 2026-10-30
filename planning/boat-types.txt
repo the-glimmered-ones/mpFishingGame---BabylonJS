@@ -9,3 +9,12 @@ tacking into the wind at close reach still allows forward progress
 changing tack with the wind to the stern (downwind) is called jibing, haul in sail during turn, so wind catches it on the other side
 sailing at broad reach (downwind at a diagonal) is faster then running (straight downwind), so repeatedly jibing in a zig zag is faster than sailing in a straight line
 quicktime minigame when wind gets strong enough? i dont want to make it too complicated
+
+trawler:
+beam trawler (outrigger) for fish
+large nets are hoisted to both sides of the ship and lowered into the water using a winch attached to a large A frame 
+uses a multibeam echosounder to find fish (sonar)
+aft deckhouse and forward working deck, where the A frame and fish catchers are located
+https://www.cannondigi.com/dutch-beam-trawlers/
+https://fishingnews.co.uk/news/beam-trawler-admiral-gordon-heads-home/
+https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fimages.squarespace-cdn.com%2Fcontent%2Fv1%2F5b214f5ecef372961e2005e5%2F1530887682249-8YME91QZJT4F7V426N21%2F_DSC5696.jpg&sp=1793384006T13cce3304e8ead5e3ea02d288862f337f3a0135173f9f1280e450803030a5f05
