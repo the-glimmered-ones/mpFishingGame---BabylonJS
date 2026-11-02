@@ -83,7 +83,6 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     water.addToRenderList(ground);
     waterMesh.material = water;
     loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
-    loadCompassMesh(scene)
     // BABYLON.Effect.ShadersStore["customFragmentShader"] = `
     // #ifdef GL_ES
     // precision highp float;
@@ -379,6 +378,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     if (boatMesh){
       addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
     }
+    loadCompassMesh(scene)
     return
 }
 
