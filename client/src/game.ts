@@ -394,7 +394,8 @@ async function loadCompassMesh(){
   const compassContainer = new BABYLON.GUI.MeshButton3D(compassMesh, "compassContainer")
   compassContainer.mesh?.setEnabled(false)
   panel.addControl(compassContainer)
-  panel.linkToTransformNode(<BABYLON.TransformNode> scene.getNodeByName("ocean-camera-pivot"));
+  panel.linkToTransformNode(boatMesh);
+  //anel.
 
   //add as babylon gui?
 }
