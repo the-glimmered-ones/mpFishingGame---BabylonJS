@@ -385,6 +385,7 @@ var compassMesh: BABYLON.Mesh
 async function loadCompassMesh(){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene)
   compassMesh = <BABYLON.Mesh> scene.getNodeByName("Compass");
+  compassMesh.position = new BABYLON.Vector3(0,10,0)
   //add as babylon gui?
 }
 
@@ -488,7 +489,7 @@ async function startGame(){//parent.getWebsocket()){
     gameLoaded = true;
     engine.runRenderLoop(() => scene.render());
     addEventListener('resize', () => { if(engine) { engine.resize() } });
-    //scene.debugLayer.show()
+    scene.debugLayer.show()
     joinedWithName = false
     console.log("scene drawn")
     addKeyListeners()
