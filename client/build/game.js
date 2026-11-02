@@ -56,8 +56,11 @@ var name = "";
 function setJoinedWithName(joinName) {
   joinedWithName = true;
   name = joinName;
+  canvas.focus();
   setInterval(queueClientAction, 10);
 }
+var ground;
+var waterMesh;
 function createWaterScene(engine, canvas) {
   var scene = new BABYLON.Scene(engine);
   camera = new BABYLON.FreeCamera("Camera", new BABYLON.Vector3(0, 0, 0), scene);
@@ -76,10 +79,10 @@ function createWaterScene(engine, canvas) {
   var groundMaterial = new BABYLON.StandardMaterial("groundMaterial", scene);
   groundMaterial.diffuseTexture = new BABYLON.Texture("textures/ground.jpg", scene);
   groundMaterial.diffuseTexture.scale(4);
-  var ground = BABYLON.CreateGround("ground", { width: 512, height: 512, subdivisions: 32 }, scene);
+  ground = BABYLON.CreateGround("ground", { width: 512, height: 512, subdivisions: 32 }, scene);
   ground.position.y = -1;
   ground.material = groundMaterial;
-  var waterMesh = BABYLON.CreateGround("waterMesh", { width: 512, height: 512, subdivisions: 32 }, scene);
+  waterMesh = BABYLON.CreateGround("waterMesh", { width: 512, height: 512, subdivisions: 32 }, scene);
   var water = new BABYLON.WaterMaterial("water", scene);
   water.bumpTexture = new BABYLON.Texture("textures/waterbump.png", scene);
   water.windForce = 15;
@@ -93,9 +96,14 @@ function createWaterScene(engine, canvas) {
   water.addToRenderList(ground);
   waterMesh.material = water;
   loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
+  loadCompassMesh();
   return scene;
 }
+var chatBox;
 var chatDisplay;
+var newChatPopup;
+var chatDisplayBottom;
+var chatDisplayLeft;
 function setupUI() {
   const body = iframe.document.body;
   body.style.flexDirection = "row";
@@ -170,17 +178,17 @@ function setupUI() {
   ui_chat_table.style.borderSpacing = "2";
   body.appendChild(ui_chat_table);
   const sendChatButton = iframe.document.getElementById("send-chat");
-  const chatBox = iframe.document.getElementById("chat-box");
+  chatBox = iframe.document.getElementById("chat-box");
   chatDisplay = iframe.document.createElement("div");
   chatDisplay.id = "chat-display";
   chatDisplay.style.backgroundColor = "antiqueWhite";
   chatDisplay.style.border = "1px solid black";
   chatDisplay.style.width = chatBox.style.width;
   chatDisplay.style.position = "absolute";
-  const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0, 1));
-  const chatLeft = chatBox.getBoundingClientRect().x;
-  chatDisplay.style.bottom = Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight + "vh";
-  chatDisplay.style.left = Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth + "vw";
+  chatDisplayBottom = Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0, 1))) * 100 / iframe.document.documentElement.clientHeight + "vh";
+  chatDisplayLeft = Math.round(chatBox.getBoundingClientRect().x) * 100 / iframe.document.documentElement.clientWidth + "vw";
+  chatDisplay.style.bottom = chatDisplayBottom;
+  chatDisplay.style.left = chatDisplayLeft;
   chatDisplay.style.display = "flex";
   chatDisplay.style.flexDirection = "column";
   chatDisplay.style.maxHeight = "30vh";
@@ -188,12 +196,30 @@ function setupUI() {
   chatDisplay.style.overflowWrap = "anywhere";
   chatDisplay.style.visibility = "hidden";
   body.appendChild(chatDisplay);
+  newChatPopup = document.createElement("div");
+  newChatPopup.style.backgroundColor = "antiqueWhite";
+  newChatPopup.style.border = "1px solid black";
+  newChatPopup.style.overflowY = "auto";
+  newChatPopup.style.maxHeight = "stretch";
+  newChatPopup.id = "new-chat-popup";
+  newChatPopup.style.bottom = chatDisplayBottom;
+  newChatPopup.style.left = chatDisplayLeft;
+  newChatPopup.style.position = "absolute";
+  newChatPopup.style.visibility = "hidden";
+  newChatPopup.style.width = chatBox.style.width;
+  body.appendChild(newChatPopup);
   chatBox.addEventListener("mouseenter", () => {
     chatDisplay.scroll(0, chatDisplay.scrollHeight);
-    chatDisplay.style.visibility = "visible";
+    if (chatHistory.length > 0) {
+      chatDisplay.style.visibility = "visible";
+    } else {
+      chatDisplay.style.visibility = "hidden";
+    }
+    newChatPopup.style.visibility = "hidden";
   }, { capture: true });
   chatDisplay.addEventListener("mouseover", () => {
     chatDisplay.style.visibility = "visible";
+    newChatPopup.style.visibility = "hidden";
   }, { capture: true });
   ui_chat_table.addEventListener("mouseleave", () => {
     chatDisplay.style.visibility = "hidden";
@@ -215,6 +241,22 @@ function setupUI() {
     }
   }, { capture: true });
 }
+function updateChatDisplay(name, sent, message) {
+  const newMsgHtml = `<p style="padding:3px; margin: 0; border: 1px solid lightGray; font-size: small">
+  <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${sent[0]}:${sent[1]}</span>
+  <br>${message}
+  </p>`;
+  chatDisplay.innerHTML += newMsgHtml;
+  newChatPopup.innerHTML = newMsgHtml;
+  if (chatDisplay.style.visibility == "hidden") {
+    newChatPopup.style.visibility = "visible";
+    window.clearTimeout();
+    setTimeout(() => {
+      newChatPopup.innerHTML = "";
+      newChatPopup.style.visibility = "hidden";
+    }, 2000);
+  }
+}
 function sendChat(msg) {
   if (msg == "") {
     return;
@@ -223,20 +265,14 @@ function sendChat(msg) {
   chatHistory.push(message);
   var hours = new Date().getHours().toString().length == 1 ? "0" + new Date().getHours().toString() : new Date().getHours().toString();
   var minutes = new Date().getMinutes().toString().length == 1 ? "0" + new Date().getMinutes().toString() : new Date().getMinutes().toString();
-  chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
-  <span id="name" style="font-weight: bold; text-decoration: underline;">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${hours}:${minutes}</span>
-  <br>${msg}
-  </p>`;
+  updateChatDisplay(name, [hours, minutes], msg);
   chatDisplay.scroll(0, chatDisplay.scrollHeight);
   ws.send(JSON.stringify(new ClientPacket(3 /* SEND_CHAT */, message)));
 }
 function displayInboundChat(message) {
   if (message.name != name) {
     chatHistory.push(message);
-    chatDisplay.innerHTML += `<p style="padding:3px; margin: 0; border: 1px solid lightGray">
-    <span id="name" style="font-weight: bold; text-decoration: underline;">${message.name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${message.time[0]}:${message.time[1]}</span>
-    <br>${message.msg}
-    </p>`;
+    updateChatDisplay(message.name, [message.time[0].toString(), message.time[1].toString()], message.msg);
   }
 }
 function toggleMap(hideElem, showElem) {
@@ -252,13 +288,6 @@ var gaff;
 async function loadBoatMesh(scene, pos) {
   await BABYLON.AppendSceneAsync("textures/sailboat.glb", scene).then(() => {
     boatMesh = scene.getNodeByName("BOAT");
-    boatMesh.checkCollisions = true;
-    console.log(boatMesh.collider);
-    boatMesh.collisionGroup = 1;
-    boatMesh.onCollideObservable.add(() => {
-      console.log("collision");
-      velocity = 0;
-    });
     addPreloadedPlayers();
   });
   console.log(scene);
@@ -303,6 +332,11 @@ async function loadBoatMesh(scene, pos) {
   }
   return;
 }
+var compassMesh;
+async function loadCompassMesh() {
+  await BABYLON.AppendSceneAsync("textures/compass.glb", scene);
+  compassMesh = scene.getNodeByName("Compass");
+}
 function addBoat(mesh, pos, scale, rotation, cameras) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
   boatObj = mesh;
@@ -329,38 +363,36 @@ class LoadedPlayer {
 }
 var preloadedPlayers = [];
 var loadedPlayers = [];
-function addOtherBoat(player) {
+function addOtherBoat(data) {
   if (!boatMesh) {
-    preloadedPlayers.push(player);
+    preloadedPlayers.push(data);
     return;
   }
-  if (player.name == name) {
-    return;
+  if (loadedPlayers.find((loadedPlayer) => {
+    return loadedPlayer.name == data.name;
+  }) === undefined) {
+    const mesh = boatMesh.createInstance(`${data.name}BoatInstance`);
+    mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1]);
+    mesh.rotation = new BABYLON.Vector3(0, data.angle, 0);
+    mesh.parent = null;
+    loadedPlayers.push(new LoadedPlayer(data.name, mesh));
+    scene.addMesh(mesh);
   }
-  if (!gameLoaded) {
-    console.log("not loaded");
-    return;
-  }
-  const mesh = boatMesh.createInstance(`${player.name}BoatInstance`);
-  mesh.position = new BABYLON.Vector3(player.position[0], BOAT_Y_POSITION, player.position[1]);
-  mesh.rotation = new BABYLON.Vector3(0, player.angle, 0);
-  mesh.parent = null;
-  mesh.collisionMask = 2;
-  scene.addMesh(mesh);
-  loadedPlayers.push(new LoadedPlayer(player.name, mesh));
 }
 function addPreloadedPlayers() {
   for (let player of preloadedPlayers) {
     addOtherBoat(player);
   }
+  preloadedPlayers.splice(0);
 }
 function updateExistingPlayerLocation(data) {
-  const player = loadedPlayers.find(({ name }) => {
-    return data.name == name;
+  const player = loadedPlayers.find((loadedPlayer) => {
+    return loadedPlayer.name == data.name;
   });
-  if (gameLoaded && player?.mesh) {
+  if (player) {
     player.mesh.position = new BABYLON.Vector3(data.position[0], BOAT_Y_POSITION, data.position[1]);
     player.mesh.rotation = new BABYLON.Vector3(0, data.angle, 0);
+    console.log(`${player.name} moved to ${player.mesh.position}`);
   } else {
     addOtherBoat(data);
   }
@@ -394,7 +426,6 @@ async function startGame() {
         engine.resize();
       }
     });
-    scene.debugLayer.show();
     joinedWithName = false;
     console.log("scene drawn");
     addKeyListeners();
@@ -496,6 +527,7 @@ function setupGizmos() {
     }
     if (finalY != y) {
       gaffMovementGizmo.dragBehavior.releaseDrag();
+      gaff.position.y = finalY;
     }
   });
   gaffRotationGizmo = new BABYLON.PlaneRotationGizmo(new BABYLON.Vector3(0, 0, 1), BABYLON.Color3.Green(), utilLayer, undefined, undefined, false, 3, BABYLON.Color3.Teal());
@@ -588,16 +620,16 @@ function addKeyListeners() {
   canvas.addEventListener("keydown", (event) => {
     const key = event.key;
     if (joinedWithName) {
-      if (key == "a") {
+      if (key == "a" || key == "ArrowLeft") {
         actionParams[0] = "W";
-      } else if (key == "d") {
+      } else if (key == "d" || key == "ArrowRight") {
         actionParams[0] = "E";
       } else {
         actionParams[0] = "";
       }
-      if (key === "w") {
+      if (key === "w" || key == "ArrowUp") {
         actionParams[1] = "N";
-      } else if (key == "s") {
+      } else if (key == "s" || key == "ArrowDown") {
         actionParams[1] = "S";
       } else {
         actionParams[1] = "";
@@ -605,20 +637,6 @@ function addKeyListeners() {
       currentAction = moveBoat;
       if (!pressedMoveKeys.includes(key)) {
         pressedMoveKeys.push(key);
-      }
-      let oceanPivot = scene.getNodeByName("ocean-camera-pivot");
-      if (key == "ArrowLeft") {
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x - 5, shipCamera.position.y, shipCamera.position.z);
-      } else if (key == "ArrowRight") {
-        shipCamera.position = new BABYLON.Vector3(shipCamera.position.x + 5, shipCamera.position.y, shipCamera.position.z);
-      } else if (key == ",") {
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y - 5, oceanPivot.position.z);
-      } else if (key == ".") {
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x, oceanPivot.position.y + 5, oceanPivot.position.z);
-      } else if (key == "ArrowUp") {
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x + 1, oceanPivot.position.y, oceanPivot.position.z);
-      } else if (key == "ArrowDown") {
-        oceanPivot.position = new BABYLON.Vector3(oceanPivot.position.x - 1, oceanPivot.position.y, oceanPivot.position.z);
       }
     }
   });
@@ -651,7 +669,7 @@ async function queueClientAction() {
     let moveKeysPressed = false;
     velocity = Math.round(velocity * 1000) / 1000;
     if (velocity != 0) {
-      if (pressedMoveKeys.includes("w") || pressedMoveKeys.includes("s") || pressedMoveKeys.includes("d") || pressedMoveKeys.includes("a")) {
+      if (pressedMoveKeys.includes("w") || pressedMoveKeys.includes("s") || pressedMoveKeys.includes("d") || pressedMoveKeys.includes("a") || pressedMoveKeys.includes("ArrowUp") || pressedMoveKeys.includes("ArrowDown") || pressedMoveKeys.includes("ArrowRight") || pressedMoveKeys.includes("ArrowLeft")) {
         moveKeysPressed = true;
       }
     }
@@ -669,6 +687,14 @@ async function queueClientAction() {
     updateVisibleChatHistory();
   }
 }
+window.addEventListener("resize", () => {
+  chatDisplayBottom = Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0, 1))) * 100 / iframe.document.documentElement.clientHeight + "vh";
+  chatDisplayLeft = Math.round(chatBox.getBoundingClientRect().x) * 100 / iframe.document.documentElement.clientWidth + "vw";
+  chatDisplay.style.bottom = chatDisplayBottom;
+  chatDisplay.style.left = chatDisplayLeft;
+  newChatPopup.style.bottom = chatDisplayBottom;
+  newChatPopup.style.left = chatDisplayLeft;
+});
 export {
   addOtherBoat,
   displayInboundChat,
