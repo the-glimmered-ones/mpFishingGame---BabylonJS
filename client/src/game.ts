@@ -393,8 +393,9 @@ async function loadCompassMesh(scene: BABYLON.Scene){
   const compassContainer = new BABYLON.GUI.MeshButton3D(compassMesh, "compassContainer")
   compassContainer.mesh?.setEnabled(false)
   panel.addControl(compassContainer)
-  panel.linkToTransformNode(<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
-  panel.position = (<BABYLON.TransformNode> panel.node).absolutePosition
+  const anchor = <BABYLON.TransformNode> scene.getNodeByName("compass-anchor")
+  panel.linkToTransformNode(anchor);
+  panel.position = anchor.absolutePosition
   console.log(panel.position)
   compassMesh.rotation = new BABYLON.Vector3(0,-90 * (Math.PI/180),0)
 
