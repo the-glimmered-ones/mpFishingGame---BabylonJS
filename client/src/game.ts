@@ -841,7 +841,9 @@ async function queueClientAction(){
     // ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
     // waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
     //doesnt even look like u move
-    (<BABYLON.Mesh>panel.mesh).position = (<BABYLON.TransformNode> scene.getNodeByName("compass-anchor")).absolutePosition
+    const anchor = (<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
+    (<BABYLON.Mesh>panel.mesh).position = anchor.absolutePosition
+    console.log(anchor)
     updateVisibleChatHistory()
   }
 }
