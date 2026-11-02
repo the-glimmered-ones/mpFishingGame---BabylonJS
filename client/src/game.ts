@@ -1,5 +1,6 @@
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
+import "babylonjs-gui";
 var ws: WebSocket = new WebSocket("");
 var iframe: Window = window.self;
 //fixed loading times by hosting this file online and importing it when needed
@@ -386,6 +387,13 @@ async function loadCompassMesh(){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene)
   compassMesh = <BABYLON.Mesh> scene.getNodeByName("Compass");
   compassMesh.position = new BABYLON.Vector3(0,10,0)
+  const guiManager = new BABYLON.GUI.GUI3DManager(scene)
+  var panel = new BABYLON.GUI.PlanePanel()
+  panel.margin = 1
+  guiManager.addControl(panel)
+  const compassContainer = new BABYLON.GUI.MeshButton3D(compassMesh, "compassContainer")
+  compassContainer.mesh?.setEnabled(false)
+  panel.addControl(compassContainer)
   //add as babylon gui?
 }
 

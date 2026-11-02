@@ -5,6 +5,7 @@
     "": {
       "name": "mpFishingGame",
       "dependencies": {
+        "@babylonjs/gui": "^9.33.2",
         "babylonjs": "^9.32.0",
         "babylonjs-gui": "^9.32.0",
         "babylonjs-loaders": "^9.32.0",
@@ -20,6 +21,10 @@
     },
   },
   "packages": {
+    "@babylonjs/core": ["@babylonjs/core@9.33.2", "", {}, "sha512-dkDoNzYKi1Cqasyg4S4JKIFSGnlX/NQRDlxOnLxJTpGLALoYcF5PAA2PgzIU9ooIRlRN9QjalK4o5v4ZMLUZYQ=="],
+
+    "@babylonjs/gui": ["@babylonjs/gui@9.33.2", "", { "peerDependencies": { "@babylonjs/core": "^9.0.0" } }, "sha512-B6GC02BB6Nr2HLIv8tUTpP7LQ3P7q3SmI9sUfcrgtb3eoap6fIkd33D9Hlyh1J9tBVRkTVLxv0cyDbkEvSFVVw=="],
+
     "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],
 
     "@types/node": ["@types/node@26.6.5", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg=="],
