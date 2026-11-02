@@ -386,7 +386,6 @@ var compassMesh: BABYLON.Mesh
 async function loadCompassMesh(scene: BABYLON.Scene){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene)
   compassMesh = <BABYLON.Mesh> scene.getNodeByName("Compass");
-  compassMesh.position = new BABYLON.Vector3(0,10,0)
   const guiManager = new BABYLON.GUI.GUI3DManager(scene)
   var panel = new BABYLON.GUI.PlanePanel()
   panel.margin = 1
