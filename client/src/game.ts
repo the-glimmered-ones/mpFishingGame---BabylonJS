@@ -83,7 +83,7 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     water.addToRenderList(ground);
     waterMesh.material = water;
     loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
-    loadCompassMesh()
+    loadCompassMesh(scene)
     // BABYLON.Effect.ShadersStore["customFragmentShader"] = `
     // #ifdef GL_ES
     // precision highp float;
@@ -383,7 +383,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
 }
 
 var compassMesh: BABYLON.Mesh
-async function loadCompassMesh(){
+async function loadCompassMesh(scene: BABYLON.Scene){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene)
   compassMesh = <BABYLON.Mesh> scene.getNodeByName("Compass");
   compassMesh.position = new BABYLON.Vector3(0,10,0)
