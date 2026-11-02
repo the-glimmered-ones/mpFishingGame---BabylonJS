@@ -1,4 +1,16 @@
 {
     "code-runner.customCommand": "bun run build.js; bun run dev",
-    "code-runner.defaultLanguage": "javascript"
+    "code-runner.defaultLanguage": "javascript",
+    "editor.inlineSuggest.suppressSuggestions": false,
+    "github.copilot.nextEditSuggestions.extendedRange": false,
+    "github.copilot.nextEditSuggestions.enabled": false,
+    "github.copilot.nextEditSuggestions.allowWhitespaceOnlyChanges": false,
+    "github.copilot.nextEditSuggestions.fixes": false,
+    "github.copilot.renameSuggestions.triggerAutomatically": false,
+    "C_Cpp.autocomplete": "disabled",
+    "js/ts.suggest.enabled": true,
+    "java.completion.postfix.enabled": true,
+    "editor.snippetSuggestions": "inline",
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.inlineSuggest.enabled": false
 }

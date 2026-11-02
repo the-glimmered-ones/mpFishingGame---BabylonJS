@@ -394,6 +394,7 @@ async function loadCompassMesh(scene: BABYLON.Scene){
   compassContainer.mesh?.setEnabled(false)
   panel.addControl(compassContainer)
   panel.linkToTransformNode(<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
+  panel.position = (panel.node?.position ? panel.node.position : new BABYLON.Vector3(0,0,0))
   compassMesh.rotation = new BABYLON.Vector3(0,-90 * (Math.PI/180),0)
 
   //add as babylon gui?
