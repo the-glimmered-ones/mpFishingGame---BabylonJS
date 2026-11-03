@@ -395,8 +395,8 @@ async function loadCompassMesh(scene: BABYLON.Scene){
   compassContainer.mesh?.setEnabled(false)
   panel.addControl(compassContainer);
   //panel.linkToTransformNode(anchor);
-  (<BABYLON.Mesh>panel.mesh).position = (<BABYLON.TransformNode> scene.getNodeByName("compass-anchor")).absolutePosition
-  console.log(panel.position)
+  const anchor = (<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
+  (<BABYLON.Mesh> scene.getNodeByName("Compass")).position = anchor.absolutePosition
   compassMesh.rotation = new BABYLON.Vector3(0,-90 * (Math.PI/180),0)
 
   //add as babylon gui?
@@ -843,7 +843,6 @@ async function queueClientAction(){
     //doesnt even look like u move
     const anchor = (<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
     (<BABYLON.Mesh> scene.getNodeByName("Compass")).position = anchor.absolutePosition
-    console.log(anchor)
     updateVisibleChatHistory()
   }
 }
