@@ -795,13 +795,14 @@ function moveBoat(){
   //if WE input, turn on rudder
   if (inputWE == "W"){
     boatObj.addRotation(0, -1 * rotSpeed, 0)
-    compassMesh.addRotation(0, 10 * rotSpeed, 0)
+    compassMesh.addRotation(0, rotSpeed, 0)
+    //for each consecutive input away from 0deg, move same distance back from ship
     //tiller.addRotation(0, -15 * (Math.PI/180), 0)
     actionParams[0] = ""
   }
   else if (inputWE == "E"){
     boatObj.addRotation(0, rotSpeed, 0)
-    compassMesh.addRotation(0, -10 * rotSpeed, 0)
+    compassMesh.addRotation(0, -1 * rotSpeed, 0)
     //tiller.addRotation(0, 15 * (Math.PI/180), 0)
     actionParams[0] = ""
   }

@@ -191095,11 +191095,11 @@ function moveBoat() {
   }
   if (inputWE == "W") {
     boatObj.addRotation(0, -1 * rotSpeed, 0);
-    compassMesh.addRotation(0, 10 * rotSpeed, 0);
+    compassMesh.addRotation(0, rotSpeed, 0);
     actionParams[0] = "";
   } else if (inputWE == "E") {
     boatObj.addRotation(0, rotSpeed, 0);
-    compassMesh.addRotation(0, -10 * rotSpeed, 0);
+    compassMesh.addRotation(0, -1 * rotSpeed, 0);
     actionParams[0] = "";
   }
   console.log(newRotation);
