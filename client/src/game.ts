@@ -382,10 +382,12 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     if (boatMesh){
       addBoat(boatMesh, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0), BOAT_SCALE, BOAT_STARTING_ROTATION, [oceanCamera, shipCamera]);
     }
+    loadCompassMesh(scene)
     return
 }
 
 var compassMesh: BABYLON.Mesh
+var panel: BABYLON.GUI.PlanePanel
 async function loadCompassMesh(scene: BABYLON.Scene){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene)
   compassMesh = <BABYLON.Mesh> scene.getNodeByName("Compass");
@@ -895,6 +897,8 @@ async function queueClientAction(){
     // ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
     // waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
     //doesnt even look like u move
+    const anchor = (<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
+    (<BABYLON.Mesh> scene.getNodeByName("Compass")).position = anchor.absolutePosition
     updateVisibleChatHistory()
   }
 }
