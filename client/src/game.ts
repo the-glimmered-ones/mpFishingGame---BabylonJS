@@ -1,14 +1,16 @@
 import { ClientPacket, ClientPacketTypes } from "@shared/PacketTypes";
 import { PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts"; 
 import "babylonjs-gui";
+import { GizmoManager } from "babylonjs";
 var ws: WebSocket = new WebSocket("");
-var iframe: Window = window.self;
+var iframe: HTMLIFrameElement;
+var doc: Document = window.document;
 //fixed loading times by hosting this file online and importing it when needed
 
 let canvas: HTMLCanvasElement = document.createElement("canvas")
 //console.log(canvas)
 
-let engine: BABYLON.Engine | null = null;
+let engine: BABYLON.Engine;
 var boatRoot: BABYLON.TransformNode;
 var boatObj: BABYLON.Mesh;
 var camera: BABYLON.FreeCamera;
@@ -19,16 +21,18 @@ const chatHistory: ChatMessage[] = []
 let BOAT_Y_POSITION: number;
 let BOAT_SCALE: BABYLON.Vector3;
 let BOAT_STARTING_ROTATION: BABYLON.Vector3;
-export function linkWsToGame(frame: Window, webSocket: WebSocket){
+export function linkWsToGame(frame: HTMLIFrameElement, webSocket: WebSocket){
   ws = webSocket
-  canvas = <HTMLCanvasElement>(iframe.window.document.body.children[0])
-  //console.log(frame.window.document.body.children)
   iframe = frame
-  //console.log(window.document.scripts)
-  BOAT_Y_POSITION = 5
-  BOAT_SCALE = new BABYLON.Vector3(5,5,5)
-  BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0)
-  startGame()
+  iframe.addEventListener("load", () => {
+    doc = (<Window>iframe.contentWindow).document
+    canvas = <HTMLCanvasElement>doc.body.children[0]
+    //console.log("hi", canvas)
+    BOAT_Y_POSITION = 5
+    BOAT_SCALE = new BABYLON.Vector3(5,5,5)
+    BOAT_STARTING_ROTATION = new BABYLON.Vector3(0, 4.712, 0)
+    startGame()
+  }, {"once":true})
 }
 var name: string = ""
 export function setJoinedWithName(joinName: string){
@@ -84,6 +88,7 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     waterMesh.material = water;
     loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0))
     loadCompassMesh(scene)
+    return scene;
     // BABYLON.Effect.ShadersStore["customFragmentShader"] = `
     // #ifdef GL_ES
     // precision highp float;
@@ -113,8 +118,6 @@ function createWaterScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     //     effect.setFloat2("screenSize", postProcess.width, postProcess.height);
     //     effect.setFloat("threshold", 0.3);
     // };
-
-return scene;
 }
 
 var chatBox: HTMLInputElement
@@ -123,10 +126,10 @@ var newChatPopup: HTMLDivElement
 var chatDisplayBottom: string
 var chatDisplayLeft: string
 function setupUI(){
-  const body = iframe.document.body
+  const body = doc.body
   body.style.flexDirection = "row"
-  const ui_minimap = iframe.document.createElement("button")
-  const minimap_img = iframe.document.createElement("img")
+  const ui_minimap = doc.createElement("button")
+  const minimap_img = doc.createElement("img")
   minimap_img.src = "textures/ui/minimap.png"
   ui_minimap.appendChild(minimap_img)
   ui_minimap.style.height, minimap_img.style.height = "28vh"
@@ -141,7 +144,7 @@ function setupUI(){
   minimap_img.toggleAttribute("inert")
   minimap_img.tabIndex, ui_minimap.tabIndex = -1
 
-  const ui_map = iframe.document.createElement("div")
+  const ui_map = doc.createElement("div")
   ui_map.style.position = "absolute"
   ui_map.style.left = "0px"
   ui_map.style.top = "0px"
@@ -156,8 +159,8 @@ function setupUI(){
   ui_map.style.backgroundAttachment = "fixed"
   ui_map.style.backgroundPosition = "50% 20%"
 
-  const ui_exit_map = iframe.document.createElement("button")
-  const exit_map_img = iframe.document.createElement("img")
+  const ui_exit_map = doc.createElement("button")
+  const exit_map_img = doc.createElement("img")
   exit_map_img.src = "textures/ui/exit-map.png"
   exit_map_img.style.width = "12vw"
   exit_map_img.style.height, ui_exit_map.style.width, ui_exit_map.style.height = "auto"
@@ -175,7 +178,7 @@ function setupUI(){
   ui_minimap.addEventListener("click", () => { toggleMap(ui_minimap, ui_map) })
   ui_exit_map.addEventListener("click", () => { toggleMap(ui_map, ui_minimap); canvas.focus() })
 
-  const ui_chat_table = iframe.document.createElement("table")
+  const ui_chat_table = doc.createElement("table")
   ui_chat_table.innerHTML = `
   <tr style="display: flex">
   <td style="background-image:url('textures/ui/chatbox.png'); background-repeat: no-repeat; background-position: top right;background-size: 100% 100%;">
@@ -195,9 +198,9 @@ function setupUI(){
   ui_chat_table.style.borderSpacing = "2"
   body.appendChild(ui_chat_table)
 
-  const sendChatButton: HTMLButtonElement = <HTMLButtonElement>iframe.document.getElementById("send-chat")
-  chatBox = <HTMLInputElement>iframe.document.getElementById("chat-box")
-  chatDisplay = iframe.document.createElement("div")
+  const sendChatButton: HTMLButtonElement = <HTMLButtonElement>doc.getElementById("send-chat")
+  chatBox = <HTMLInputElement>doc.getElementById("chat-box")
+  chatDisplay = doc.createElement("div")
   chatDisplay.id = "chat-display"
   // chatDisplay.innerHTML = `<p style="margin:1px">
   // <span id="name" style="font-weight: bold">${name}:</span><span style="font-style:italic; color: gray; position: absolute; right: 3px;">${new Date().getHours()}:${new Date().getMinutes()}</span>
@@ -209,8 +212,8 @@ function setupUI(){
   chatDisplay.style.position = "absolute"
   //const chatHeight = chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))//in px
   //const chatLeft = (chatBox.getBoundingClientRect().x)
-  chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / iframe.document.documentElement.clientHeight) + "vh"
-  chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / doc.documentElement.clientHeight) + "vh"
+  chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / doc.documentElement.clientWidth) + "vw"
   //console.log("chat height " + chatHeight.toString() + "px " + (Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh")
   chatDisplay.style.bottom = chatDisplayBottom//(Math.round(chatHeight) * 100 / iframe.document.documentElement.clientHeight) + "vh"//converting to viewport units
   chatDisplay.style.left = chatDisplayLeft//(Math.round(chatLeft) * 100 / iframe.document.documentElement.clientWidth) + "vw"
@@ -387,14 +390,14 @@ async function loadCompassMesh(scene: BABYLON.Scene){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene)
   compassMesh = <BABYLON.Mesh> scene.getNodeByName("Compass");
   compassMesh.position = new BABYLON.Vector3(0,10,0)
-  const guiManager = new BABYLON.GUI.GUI3DManager(scene)
-  var panel = new BABYLON.GUI.PlanePanel()
-  panel.margin = 1
-  guiManager.addControl(panel)
-  const compassContainer = new BABYLON.GUI.MeshButton3D(compassMesh, "compassContainer")
-  compassContainer.mesh?.setEnabled(false)
-  panel.addControl(compassContainer)
-  panel.linkToTransformNode(<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
+  //const guiManager = new BABYLON.GUI.GUI3DManager(scene)
+  //var panel = new BABYLON.GUI.PlanePanel()
+  //panel.margin = 1
+  //guiManager.addControl(panel)
+  //const compassContainer = new BABYLON.GUI.MeshButton3D(compassMesh, "compassContainer")
+  //compassContainer.mesh?.setEnabled(false)
+  //panel.addControl(compassContainer)
+  //panel.linkToTransformNode(<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
   compassMesh.rotation = new BABYLON.Vector3(0,-90 * (Math.PI/180),0)
 
   //add as babylon gui?
@@ -482,35 +485,64 @@ export function removePlayerShipOnLeave(name: string){
 //https://stackoverflow.com/questions/251420/invoking-javascript-code-in-an-iframe-from-the-parent-page
 //https://www.reddit.com/r/javascript/comments/657ma6/attempting_to_call_parent_function_from_iframe_is/
 var scene: BABYLON.Scene;
-async function startGame(){//parent.getWebsocket()){
+var wsOpen: boolean = false;
+var iframeLoaded: boolean = false;
+function startGame(){//parent.getWebsocket()){
   console.log("start game")
-  ws.addEventListener("open", async () => {
-    //if (engine == null) {
-    canvas = <HTMLCanvasElement>(iframe.document.getElementById("renderCanvas"))//iframe.window.document.body.children[0])
-    engine = new BABYLON.Engine(canvas, true); //,{ preserveDrawingBuffer: true, stencil: true });
-    //}
 
+  if (ws.readyState == ws.OPEN){
+    //console.log("ws open")
+    wsOpen = true
+    tryRender()
+  }
+  else{
+    ws.addEventListener("open", () => {
+      //console.log("ws open")
+      wsOpen = true
+      tryRender()
+    })
+  }
+
+  if (doc.readyState == "complete"){
+    iframeLoaded = true
+    //console.log("iframe loaded")
+    tryRender()
+  }
+  else{
+    doc.addEventListener("load", () => {
+      iframeLoaded = true
+      //console.log("iframe loaded")
+      tryRender()
+    })
+  }
+}
+
+function tryRender(){
+  if (wsOpen && iframeLoaded) {
+    engine = new BABYLON.Engine(canvas, true); //,{ preserveDrawingBuffer: true, stencil: true });
     let createScene = createWaterScene;// || mod.default;
     // if (!createScene && mod.Playground?.CreateScene) createScene = (e,c)=>mod.Playground.CreateScene(e,c);
     if (!createScene) throw new Error('No createScene() export found.');
 
     //console.log("made here")
     //console.log(iframe.window.document.body.children)
-    scene = await createWaterScene(engine, canvas);
-    gameLoaded = true;
+    scene = createWaterScene(engine, canvas);
     engine.runRenderLoop(() => scene.render());
-    addEventListener('resize', () => { if(engine) { engine.resize() } });
-    scene.debugLayer.show()
-    joinedWithName = false
-    console.log("scene drawn")
-    addKeyListeners()
-    setupUI()
-
+    scene.afterRender = () => {
+      gameLoaded = true;
+      addEventListener('resize', () => { if(engine) { engine.resize() } });
+      scene.debugLayer.show()
+      joinedWithName = false
+      console.log("scene drawn")
+      addKeyListeners()
+      setupUI()
+      scene.afterRender = null
+    }
     // //this stopped it from rendering
     // if (typeof createWaterScene === 'function') {
     //   try { engine = await createWaterScene; } catch {}
     // }
-  })
+  }
 }
 
 var shipView = false
@@ -644,6 +676,30 @@ function setupGizmos(){
     }
     console.log(z)
   });
+  const compassManager = new BABYLON.GizmoManager(scene)
+  compassManager.positionGizmoEnabled = true
+  compassManager.rotationGizmoEnabled = true
+  if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo){
+    compassManager.gizmos.positionGizmo.scaleRatio = .5
+    compassManager.gizmos.positionGizmo.gizmoLayer = utilLayer
+    compassManager.gizmos.positionGizmo.updateGizmoPositionToMatchAttachedMesh = true
+    compassManager.gizmos.positionGizmo.updateGizmoRotationToMatchAttachedMesh = true
+    compassManager.gizmos.positionGizmo.attachedMesh = compassMesh
+    compassManager.gizmos.positionGizmo.onDragObservable.add((e) => {
+
+    })
+    compassManager.gizmos.rotationGizmo.scaleRatio = .5
+    compassManager.gizmos.rotationGizmo.gizmoLayer = utilLayer
+    compassManager.gizmos.rotationGizmo.updateGizmoPositionToMatchAttachedMesh = true
+    compassManager.gizmos.rotationGizmo.updateGizmoRotationToMatchAttachedMesh = true
+    compassManager.gizmos.rotationGizmo.attachedMesh = compassMesh
+  }
+  
+  // compassDragGizmo = new BABYLON.AxisDragGizmo(new BABYLON)
+  // compassDragGizmo.attachedMesh = compassMesh
+  // compassDragGizmo.updateGizmoRotationToMatchAttachedMesh = true;
+  // compassDragGizmo.updateGizmoPositionToMatchAttachedMesh = true;
+  // compassDragGizmo.scaleRatio = 1
 }
 
 const enum RotationType{
@@ -843,8 +899,8 @@ async function queueClientAction(){
   }
 }
 window.addEventListener("resize", () => {
-  chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / iframe.document.documentElement.clientHeight) + "vh"
-  chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / iframe.document.documentElement.clientWidth) + "vw"
+  chatDisplayBottom = (Math.round(chatBox.getBoundingClientRect().height + Number(chatBox.style.marginTop.slice(0,1))) * 100 / doc.documentElement.clientHeight) + "vh"
+  chatDisplayLeft = (Math.round((chatBox.getBoundingClientRect().x)) * 100 / doc.documentElement.clientWidth) + "vw"
   chatDisplay.style.bottom = chatDisplayBottom
   chatDisplay.style.left = chatDisplayLeft
   newChatPopup.style.bottom = chatDisplayBottom

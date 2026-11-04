@@ -5,7 +5,7 @@
     "dev": "bun run --watch api/server.ts",
     "build": "bun run build.js"
   },
-  "main": "server.ts",
+  "main": "api/server.ts",
   "files": ["shared/", "shared/textures/"],
   "dependencies": {
     "@babylonjs/gui": "^9.33.2",

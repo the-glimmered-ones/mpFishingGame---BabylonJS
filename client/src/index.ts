@@ -1,13 +1,12 @@
 import { ChatMessage, GlobalClientLocation, ShipTypes } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 
-//export const ws: WebSocket = new WebSocket("ws://localhost:2323")
-export const ws: WebSocket = new WebSocket("https://mpfishinggame-babylonjs.onrender.com/")
+export const ws: WebSocket = new WebSocket("ws://localhost:2323")
+//export const ws: WebSocket = new WebSocket("https://mpfishinggame-babylonjs.onrender.com/")
 
 var gameFrameWindow: Window
 const gameModule = await import("./game.js")
-//console.log(gameModule)
-addEventListener("load", async () => {
+addEventListener("load", () => {
     const gameFrame: HTMLIFrameElement = <HTMLIFrameElement>document.getElementById("gameFrame")
     gameFrameWindow = <Window>gameFrame.contentWindow
     gameFrameWindow.name = "gameFrameWindow"
@@ -28,14 +27,12 @@ addEventListener("load", async () => {
         </head>
         <body>
             <canvas id=renderCanvas></canvas>
-            
         </body>
     </html>`;
-
-    (async function linkGameToIFrame() {
-        gameModule.linkWsToGame(gameFrameWindow, ws)
+    (() => {
+        gameModule.linkWsToGame(gameFrame, ws)
     }).call(gameFrame.contentDocument)
-})
+}, {"once":true})
 
 
 const nameInput: HTMLInputElement = <HTMLInputElement>document.getElementById("nameInput");
