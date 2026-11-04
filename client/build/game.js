@@ -190448,7 +190448,6 @@ function createWaterScene(engine, canvas) {
   water.addToRenderList(ground);
   waterMesh.material = water;
   loadBoatMesh(scene, new BABYLON.Vector3(0, BOAT_Y_POSITION, 0));
-  loadCompassMesh(scene);
   return scene;
 }
 var chatBox;
@@ -190666,6 +190665,7 @@ async function loadBoatMesh(scene, pos) {
   shipCamera.target = scene.getNodeByName("camera-target").position;
   camera = oceanCamera;
   shipCamera.fov = 0.33;
+  await loadCompassMesh(scene);
   setupGizmos();
   for (let mesh of scene.meshes) {
     if (mesh.name == "gaff" || mesh.name == "boom") {
@@ -190685,11 +190685,17 @@ async function loadBoatMesh(scene, pos) {
   return;
 }
 var compassMesh;
+var COMPASS_MESH_BASE_POSITION = new BABYLON.Vector3(-1.88, 251.93, -0.22);
+var COMPASS_MESH_BASE_ROTATION = new BABYLON.Vector3(7.46 * (Math.PI / 180), 91.47 * (Math.PI / 180), 98.71 * (Math.PI / 180));
 async function loadCompassMesh(scene) {
-  await BABYLON.AppendSceneAsync("textures/compass.glb", scene);
-  compassMesh = scene.getNodeByName("Compass");
-  compassMesh.position = new BABYLON.Vector3(0, 10, 0);
-  compassMesh.rotation = new BABYLON.Vector3(0, -90 * (Math.PI / 180), 0);
+  await BABYLON.AppendSceneAsync("textures/compass.glb", scene).then(() => {
+    compassMesh = scene.meshes.find((mesh) => {
+      return mesh.name == "Compass";
+    });
+    compassMesh.position = COMPASS_MESH_BASE_POSITION;
+    compassMesh.rotation = COMPASS_MESH_BASE_ROTATION;
+    console.log(compassMesh.position.subtract(boatMesh.position));
+  });
 }
 function addBoat(mesh, pos, scale, rotation, cameras) {
   boatRoot = new BABYLON.TransformNode("boatTransform");
@@ -190809,6 +190815,19 @@ function tryRender() {
       setupUI();
       scene.afterRender = null;
     };
+    scene.onNewMeshAddedObservable.add(() => {
+      let mesh = scene.meshes.find((mesh) => {
+        return mesh.name == "__root__";
+      });
+      if (mesh) {
+        if (mesh.getChildren()) {
+          for (let child of mesh.getChildren()) {
+            child.parent = null;
+          }
+        }
+        mesh.dispose();
+      }
+    });
   }
 }
 var shipView = false;
@@ -190826,6 +190845,10 @@ function changeShipView() {
     mastRotationGizmo.attachedMesh = mast;
     gaffMovementGizmo.attachedMesh = gaff;
     gaffRotationGizmo.attachedMesh = gaff;
+    if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo) {
+      compassManager.gizmos.positionGizmo.attachedMesh = compassMesh;
+      compassManager.gizmos.rotationGizmo.attachedMesh = compassMesh;
+    }
     shipView = true;
   }
 }
@@ -190833,6 +190856,7 @@ var tillerRotationGizmo;
 var mastRotationGizmo;
 var gaffMovementGizmo;
 var gaffRotationGizmo;
+var compassManager;
 function setupGizmos() {
   var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
   tiller.behaviors.splice(0);
@@ -190932,9 +190956,10 @@ function setupGizmos() {
     }
     console.log(z);
   });
-  const compassManager = new BABYLON.GizmoManager(scene);
+  compassManager = new BABYLON.GizmoManager(scene);
   compassManager.positionGizmoEnabled = true;
   compassManager.rotationGizmoEnabled = true;
+  compassManager.usePointerToAttachGizmos = false;
   if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo) {
     compassManager.gizmos.positionGizmo.scaleRatio = 0.5;
     compassManager.gizmos.positionGizmo.gizmoLayer = utilLayer;
@@ -190942,10 +190967,10 @@ function setupGizmos() {
     compassManager.gizmos.positionGizmo.updateGizmoRotationToMatchAttachedMesh = true;
     compassManager.gizmos.positionGizmo.attachedMesh = compassMesh;
     compassManager.gizmos.positionGizmo.onDragObservable.add((e) => {});
-    compassManager.gizmos.rotationGizmo.scaleRatio = 0.5;
+    compassManager.gizmos.rotationGizmo.scaleRatio = 0.3;
     compassManager.gizmos.rotationGizmo.gizmoLayer = utilLayer;
     compassManager.gizmos.rotationGizmo.updateGizmoPositionToMatchAttachedMesh = true;
-    compassManager.gizmos.rotationGizmo.updateGizmoRotationToMatchAttachedMesh = true;
+    compassManager.gizmos.rotationGizmo.updateGizmoRotationToMatchAttachedMesh = false;
     compassManager.gizmos.rotationGizmo.attachedMesh = compassMesh;
   }
 }
@@ -190982,6 +191007,7 @@ var acceleration = 0.02;
 var MAX_VELOCITY = 0.2;
 var velocity = 0;
 var rotSpeed = 5 * (Math.PI / 180);
+var newRotation = 0;
 function moveBoat() {
   if (!joinedWithName) {
     return;
@@ -191004,12 +191030,16 @@ function moveBoat() {
   }
   if (inputWE == "W") {
     boatObj.addRotation(0, -1 * rotSpeed, 0);
+    compassMesh.addRotation(0, 10 * rotSpeed, 0);
     actionParams[0] = "";
   } else if (inputWE == "E") {
     boatObj.addRotation(0, rotSpeed, 0);
+    compassMesh.addRotation(0, -10 * rotSpeed, 0);
     actionParams[0] = "";
   }
+  console.log(newRotation);
 }
+var disableGizmo = false;
 var pressedMoveKeys = [];
 function addKeyListeners() {
   canvas.addEventListener("keydown", (event) => {
@@ -191033,6 +191063,9 @@ function addKeyListeners() {
       if (!pressedMoveKeys.includes(key)) {
         pressedMoveKeys.push(key);
       }
+      if (key == "p") {
+        disableGizmo = !disableGizmo;
+      }
     }
   });
   canvas.addEventListener("keyup", (event) => {
@@ -191054,7 +191087,6 @@ function addKeyListeners() {
     }
   });
 }
-function updateVisibleChatHistory() {}
 var currentAction = () => {};
 var actionParams = [];
 var delta;
@@ -191079,7 +191111,11 @@ async function queueClientAction() {
       oceanCamera.parent = scene.getNodeByName("ocean-camera-pivot");
       oceanCamera.target = scene.getNodeByName("camera-target").position;
     }
-    updateVisibleChatHistory();
+    if (!disableGizmo) {
+      compassMesh.rotation = new BABYLON.Vector3(COMPASS_MESH_BASE_ROTATION.x, compassMesh.rotation.y, COMPASS_MESH_BASE_ROTATION.z);
+      compassMesh.position = new BABYLON.Vector3(boatMesh.position.x + COMPASS_MESH_BASE_POSITION.x, COMPASS_MESH_BASE_POSITION.y, boatMesh.position.z + COMPASS_MESH_BASE_POSITION.z);
+      newRotation = 0;
+    }
   }
 }
 window.addEventListener("resize", () => {
