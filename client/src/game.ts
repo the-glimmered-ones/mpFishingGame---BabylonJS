@@ -361,6 +361,7 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
     shipCamera.fov = .33
     //console.log(scene.cameras)
     await loadCompassMesh(scene)
+    updateCompassDisplay()
     setupGizmos();
 
     for (let mesh of scene.meshes){
@@ -389,20 +390,27 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
 var compassMesh: BABYLON.Mesh
 //var panel: BABYLON.GUI.PlanePanel
 const COMPASS_MESH_BASE_POSITION = new BABYLON.Vector3(-1.88, 251.93, -0.22)
-const COMPASS_MESH_BASE_ROTATION = new BABYLON.Vector3(7.46 * (Math.PI/180), 91.47 * (Math.PI/180), 98.71 * (Math.PI/180))
+const COMPASS_MESH_BASE_ROTATION = new BABYLON.Vector3(9.01 * (Math.PI/180), -178.33 * (Math.PI/180), 96.18 * (Math.PI/180))
 var distX: number
 var distY: number
 var distZ: number
 var angleY: number
 var compassLoaded: boolean = false
+var dial: BABYLON.Mesh
 async function loadCompassMesh(scene: BABYLON.Scene){
   await BABYLON.AppendSceneAsync("textures/compass.glb", scene).then(() => {
     if (!compassLoaded){
       compassMesh = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "Compass"; });
-      compassMesh.position = COMPASS_MESH_BASE_POSITION
+      dial = <BABYLON.Mesh>scene.getNodeById("Dial")
+      const compassAnchor = <BABYLON.TransformNode> scene.getNodeByName("compass-anchor");
+      compassAnchor.position = COMPASS_MESH_BASE_POSITION
+      compassMesh.parent = compassAnchor
+      compassMesh.position = new BABYLON.Vector3(7.85,167.2,2.33)
       compassMesh.rotation = COMPASS_MESH_BASE_ROTATION
-      const dial = <BABYLON.Mesh> scene.meshes.find((mesh) => { return mesh.name == "Dial"; });
-      (<BABYLON.Texture>(<BABYLON.PBRMaterial>dial.material).albedoTexture).uAng = 95 * (Math.PI/180)
+      const texture = (<BABYLON.Texture>(<BABYLON.PBRMaterial>dial.material).albedoTexture)
+      texture.uAng = 16.8 * (Math.PI/180)
+      texture.uOffset = 2.0
+      texture.vOffset = -0.16
       distX = Math.round((boatMesh.position.x - COMPASS_MESH_BASE_POSITION.x)*1000)/1000
       distY = Math.round((boatMesh.position.y - COMPASS_MESH_BASE_POSITION.y)*1000)/1000
       distZ = Math.round((boatMesh.position.z - COMPASS_MESH_BASE_POSITION.z)*1000)/1000
@@ -594,10 +602,11 @@ function changeShipView(){
     mastRotationGizmo.attachedMesh = mast
     gaffMovementGizmo.attachedMesh = gaff
     gaffRotationGizmo.attachedMesh = gaff
-    if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo){
-      compassManager.gizmos.positionGizmo.attachedMesh = compassMesh
-      compassManager.gizmos.rotationGizmo.attachedMesh = compassMesh
-    }
+    // if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo){
+    //   const dial = <BABYLON.Mesh>scene.getNodeById("Dial")
+    //   compassManager.gizmos.positionGizmo.attachedMesh = dial
+    //   compassManager.gizmos.rotationGizmo.attachedMesh = dial
+    // }
     shipView = true
   }
 }
@@ -714,26 +723,38 @@ function setupGizmos(){
     }
     //console.log(z)
   });
-  compassManager = new BABYLON.GizmoManager(scene)
-  compassManager.positionGizmoEnabled = true
-  compassManager.rotationGizmoEnabled = true
-  compassManager.usePointerToAttachGizmos = false
-  if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo){
-    compassManager.gizmos.positionGizmo.scaleRatio = .5
-    compassManager.gizmos.positionGizmo.gizmoLayer = utilLayer
-    compassManager.gizmos.positionGizmo.updateGizmoPositionToMatchAttachedMesh = true
-    compassManager.gizmos.positionGizmo.updateGizmoRotationToMatchAttachedMesh = true
-    compassManager.gizmos.positionGizmo.attachedMesh = compassMesh
-    compassManager.gizmos.positionGizmo.onDragObservable.add((e) => {
+  // compassManager = new BABYLON.GizmoManager(scene)
+  // compassManager.positionGizmoEnabled = true
+  // compassManager.rotationGizmoEnabled = true
+  // compassManager.usePointerToAttachGizmos = false
+  // dial = <BABYLON.Mesh>scene.getNodeById("Dial")
+  // if (compassManager.gizmos.positionGizmo && compassManager.gizmos.rotationGizmo){
+  //   compassManager.gizmos.positionGizmo.scaleRatio = .5
+  //   compassManager.gizmos.positionGizmo.gizmoLayer = utilLayer
+  //   compassManager.gizmos.positionGizmo.updateGizmoPositionToMatchAttachedMesh = true
+  //   compassManager.gizmos.positionGizmo.updateGizmoRotationToMatchAttachedMesh = true
+  //   compassManager.gizmos.positionGizmo.attachedMesh = dial
 
-    })
-    compassManager.gizmos.rotationGizmo.scaleRatio = .3
-    compassManager.gizmos.rotationGizmo.gizmoLayer = utilLayer
-    compassManager.gizmos.rotationGizmo.updateGizmoPositionToMatchAttachedMesh = true
-    compassManager.gizmos.rotationGizmo.updateGizmoRotationToMatchAttachedMesh = false
-    compassManager.gizmos.rotationGizmo.attachedMesh = compassMesh
-  }
+  //   compassManager.gizmos.rotationGizmo.scaleRatio = .3
+  //   compassManager.gizmos.rotationGizmo.gizmoLayer = utilLayer
+  //   compassManager.gizmos.rotationGizmo.updateGizmoPositionToMatchAttachedMesh = true
+  //   compassManager.gizmos.rotationGizmo.updateGizmoRotationToMatchAttachedMesh = true
+  //   compassManager.gizmos.rotationGizmo.attachedMesh = dial
+  // }
   
+}
+
+function updateCompassDisplay(){
+  const northDisplay = <BABYLON.Mesh> scene.getNodeById("NorthDisplay")
+  const eastDisplay = <BABYLON.Mesh> scene.getNodeById("EastDisplay")
+  const southDisplay = <BABYLON.Mesh> scene.getNodeById("SouthDisplay")
+  const westDisplay = <BABYLON.Mesh> scene.getNodeById("WestDisplay")
+  const numberDisplay = <BABYLON.Mesh> scene.getNodeById("NumberDisplay")
+  eastDisplay.isVisible = false
+  southDisplay.isVisible = false
+  westDisplay.isVisible = false
+  numberDisplay.isVisible = false
+  northDisplay.isVisible = true
 }
 
 const enum RotationType{
@@ -936,23 +957,8 @@ async function queueClientAction(){
     // ground.position = new BABYLON.Vector3(boatObj.position.x, ground.position.y, boatObj.position.z)
     // waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
     //doesnt even look like u move
-    if (!disableGizmo){
-      let rotDegrees = (newRotation * 180/Math.PI)
-      rotDegrees = Math.round(rotDegrees/5)*5
-      if (rotDegrees % 360 == 0){
-        rotDegrees = 0
-        newRotation = rotDegrees * (Math.PI/180)
-      }
-      
-      //rotDegrees = Math.abs(rotDegrees)
-      //on the range of 0-360
-
-      compassMesh.position = new BABYLON.Vector3(boatMesh.position.x - (distX + distX * (rotDegrees/180 * 5)), COMPASS_MESH_BASE_POSITION.y, boatMesh.position.z - (distZ - distZ * (rotDegrees/180 * 5)))
-      //console.log(`${compassMesh.rotation.y}, ${boatMesh.rotation.y}, ${angleY}, ${newRotation}`)
-      compassMesh.rotation = new BABYLON.Vector3(COMPASS_MESH_BASE_ROTATION.x, angleY - Math.round(newRotation*10000)/10000, COMPASS_MESH_BASE_ROTATION.z)
-      //newRotation = 0
-      //compassMesh.position.add()
-    }
+    dial.addRotation(0,newRotation,0)
+    newRotation = 0
   }
 }
 window.addEventListener("resize", () => {

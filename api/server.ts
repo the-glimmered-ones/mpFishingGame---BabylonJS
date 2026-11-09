@@ -1,7 +1,7 @@
 import { ShipTypes, PlayerLocation, GlobalClientLocation, ChatMessage } from "@shared/Consts";
 import { ClientPacketTypes, ServerPacketTypes, ClientPacket, ServerPacket } from "@shared/PacketTypes";
 import page from "@build/index.html"
-import { readdir } from "node:fs/promises";
+// import { readdir } from "node:fs/promises";
 import { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } from "obscenity";
 
 
@@ -51,7 +51,7 @@ Bun.serve({
     hostname: HOST_NAME,
     routes: {
         "/": page,
-        "/hi": new Response ("uck"),
+        // "/hi": new Response ("uck"),
         "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
         "/textures/TropicalSunnyDay/*": ({url}) => {return serveRes(url, "TropicalSunnyDay/")},
         "/textures/*": ({url}) => {return serveRes(url)},
