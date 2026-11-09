@@ -247218,10 +247218,6 @@ async function loadBoatMesh(scene, pos) {
 var compassMesh;
 var COMPASS_MESH_BASE_POSITION = new BABYLON.Vector3(-1.88, 251.93, -0.22);
 var COMPASS_MESH_BASE_ROTATION = new BABYLON.Vector3(9.01 * (Math.PI / 180), -178.33 * (Math.PI / 180), 96.18 * (Math.PI / 180));
-var distX;
-var distY;
-var distZ;
-var angleY;
 var compassLoaded = false;
 var dial;
 async function loadCompassMesh(scene) {
@@ -247240,11 +247236,6 @@ async function loadCompassMesh(scene) {
       texture.uAng = 16.8 * (Math.PI / 180);
       texture.uOffset = 2;
       texture.vOffset = -0.16;
-      distX = Math.round((boatMesh.position.x - COMPASS_MESH_BASE_POSITION.x) * 1000) / 1000;
-      distY = Math.round((boatMesh.position.y - COMPASS_MESH_BASE_POSITION.y) * 1000) / 1000;
-      distZ = Math.round((boatMesh.position.z - COMPASS_MESH_BASE_POSITION.z) * 1000) / 1000;
-      angleY = Math.round((COMPASS_MESH_BASE_ROTATION.y - boatMesh.rotation.y) * 1000) / 1000;
-      console.log(`dist: ${distX},${distY},${distZ}; ${angleY}`);
       compassLoaded = true;
     }
   });
@@ -247403,6 +247394,7 @@ var tillerRotationGizmo;
 var mastRotationGizmo;
 var gaffMovementGizmo;
 var gaffRotationGizmo;
+var TILLER_MAX_ROTATION = 25;
 function setupGizmos() {
   var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
   tiller.behaviors.splice(0);
@@ -247423,7 +247415,7 @@ function setupGizmos() {
     let y = (tiller.rotationQuaternion ? tiller.rotationQuaternion.y : tiller.rotation.y) * (180 / Math.PI);
     let factor = Math.round(tiller.scaling.x * 100) / 100;
     tiller.scaling = new BABYLON.Vector3(factor, factor, factor);
-    const gizmoResult = rotateGizmo(y, 25, tiller.rotationQuaternion ? tiller.rotationQuaternion : undefined);
+    const gizmoResult = rotateGizmo(y, TILLER_MAX_ROTATION, tiller.rotationQuaternion ? tiller.rotationQuaternion : undefined);
     if (gizmoResult.boundsHit) {
       tillerRotationGizmo.dragBehavior.releaseDrag();
     }
@@ -247651,6 +247643,15 @@ async function queueClientAction() {
       oceanCamera.target = scene.getNodeByName("camera-target").position;
     }
     dial.addRotation(0, newRotation, 0);
+    tiller.addRotation(0, newRotation, 0);
+    console.log(tiller.rotation.y);
+    if (tiller.rotationQuaternion) {
+      if (tiller.rotationQuaternion.y * (Math.PI / 180) > TILLER_MAX_ROTATION) {
+        tiller.rotation.y = TILLER_MAX_ROTATION;
+      } else if (tiller.rotationQuaternion.y * (Math.PI / 180) < TILLER_MAX_ROTATION * -1) {
+        tiller.rotation.y = TILLER_MAX_ROTATION * -1;
+      }
+    }
     newRotation = 0;
   }
 }

@@ -388,13 +388,8 @@ async function loadBoatMesh(scene: BABYLON.Scene, pos: BABYLON.Vector3){
 }
 
 var compassMesh: BABYLON.Mesh
-//var panel: BABYLON.GUI.PlanePanel
 const COMPASS_MESH_BASE_POSITION = new BABYLON.Vector3(-1.88, 251.93, -0.22)
 const COMPASS_MESH_BASE_ROTATION = new BABYLON.Vector3(9.01 * (Math.PI/180), -178.33 * (Math.PI/180), 96.18 * (Math.PI/180))
-var distX: number
-var distY: number
-var distZ: number
-var angleY: number
 var compassLoaded: boolean = false
 var dial: BABYLON.Mesh
 async function loadCompassMesh(scene: BABYLON.Scene){
@@ -411,25 +406,9 @@ async function loadCompassMesh(scene: BABYLON.Scene){
       texture.uAng = 16.8 * (Math.PI/180)
       texture.uOffset = 2.0
       texture.vOffset = -0.16
-      distX = Math.round((boatMesh.position.x - COMPASS_MESH_BASE_POSITION.x)*1000)/1000
-      distY = Math.round((boatMesh.position.y - COMPASS_MESH_BASE_POSITION.y)*1000)/1000
-      distZ = Math.round((boatMesh.position.z - COMPASS_MESH_BASE_POSITION.z)*1000)/1000
-      angleY = Math.round((COMPASS_MESH_BASE_ROTATION.y - boatMesh.rotation.y)*1000)/1000
-      console.log(`dist: ${distX},${distY},${distZ}; ${angleY}`)
       compassLoaded = true
     }
-    //console.log(compassMesh.position.subtract(boatMesh.position))
   })
-  //const guiManager = new BABYLON.GUI.GUI3DManager(scene)
-  //var panel = new BABYLON.GUI.PlanePanel()
-  //panel.margin = 1
-  //guiManager.addControl(panel)
-  //const compassContainer = new BABYLON.GUI.MeshButton3D(compassMesh, "compassContainer")
-  //compassContainer.mesh?.setEnabled(false)
-  //panel.addControl(compassContainer)
-  //panel.linkToTransformNode(<BABYLON.TransformNode> scene.getNodeByName("compass-anchor"));
-
-  //add as babylon gui?
 }
 
 function addBoat(mesh: BABYLON.Mesh, pos: BABYLON.Vector3, scale: BABYLON.Vector3, rotation: BABYLON.Vector3, cameras?: BABYLON.FreeCamera[]){
@@ -616,6 +595,7 @@ var mastRotationGizmo: BABYLON.PlaneRotationGizmo;
 var gaffMovementGizmo: BABYLON.AxisDragGizmo;
 var gaffRotationGizmo: BABYLON.PlaneRotationGizmo;
 var compassManager: BABYLON.GizmoManager;
+const TILLER_MAX_ROTATION = 25
 function setupGizmos(){
   var utilLayer = new BABYLON.UtilityLayerRenderer(scene);
   tiller.behaviors.splice(0)
@@ -637,7 +617,7 @@ function setupGizmos(){
     let y = (tiller.rotationQuaternion ? tiller.rotationQuaternion.y : tiller.rotation.y) * (180/Math.PI)
     let factor = Math.round(tiller.scaling.x * 100)/100
     tiller.scaling = new BABYLON.Vector3(factor, factor, factor)
-    const gizmoResult = rotateGizmo(y, 25, (tiller.rotationQuaternion ? tiller.rotationQuaternion : undefined));
+    const gizmoResult = rotateGizmo(y, TILLER_MAX_ROTATION, (tiller.rotationQuaternion ? tiller.rotationQuaternion : undefined));
     if (gizmoResult.boundsHit){
       tillerRotationGizmo.dragBehavior.releaseDrag()
     }
@@ -834,16 +814,12 @@ function moveBoat(){
   if (inputWE == "W"){
     boatObj.addRotation(0, -1 * rotSpeed, 0)
     newRotation += rotSpeed
-    //compassMesh.addRotation(0, rotSpeed, 0)
     //for each consecutive input away from 0deg, move same distance back from ship
-    //tiller.addRotation(0, -15 * (Math.PI/180), 0)
     actionParams[0] = ""
   }
   else if (inputWE == "E"){
     boatObj.addRotation(0, rotSpeed, 0)
-    //compassMesh.addRotation(0, -1 * rotSpeed, 0)
     newRotation += (-1 * rotSpeed)
-    //tiller.addRotation(0, 15 * (Math.PI/180), 0)
     actionParams[0] = ""
   }
   
@@ -958,6 +934,14 @@ async function queueClientAction(){
     // waterMesh.position = new BABYLON.Vector3(boatObj.position.x, waterMesh.position.y, boatObj.position.z)
     //doesnt even look like u move
     dial.addRotation(0,newRotation,0)
+    tiller.addRotation(0,newRotation,0)
+    console.log(tiller.rotation.y)
+    if (tiller.rotation.y * (Math.PI/180) > TILLER_MAX_ROTATION){
+      tiller.rotation.y = TILLER_MAX_ROTATION
+    }
+    else if (tiller.rotation.y * (Math.PI/180) < TILLER_MAX_ROTATION * -1){
+      tiller.rotation.y = TILLER_MAX_ROTATION * -1
+    }
     newRotation = 0
   }
 }
