@@ -5,6 +5,7 @@ export const ws: WebSocket = new WebSocket("ws://localhost:2323")
 //export const ws: WebSocket = new WebSocket("https://mpfishinggame-babylonjs.onrender.com/")
 
 var gameFrameWindow: Window
+var linkedWs: boolean = false
 const gameModule = await import("./game.js")
 addEventListener("load", () => {
     const gameFrame: HTMLIFrameElement = <HTMLIFrameElement>document.getElementById("gameFrame")
@@ -29,9 +30,13 @@ addEventListener("load", () => {
             <canvas id=renderCanvas></canvas>
         </body>
     </html>`;
-    (() => {
-        gameModule.linkWsToGame(gameFrame, ws)
-    }).call(gameFrame.contentDocument)
+    ws.addEventListener("open", () => {
+        (() => {
+            gameModule.linkWsToGame(gameFrame, ws)
+        }).call(gameFrame.contentDocument)
+        linkedWs = true
+        setupEventListeners()
+    })
 }, {"once":true})
 
 
@@ -86,12 +91,14 @@ for (let btn of shipSelectRadioBtns){
 
 let name: string
 const submitNameBtn: HTMLButtonElement = <HTMLButtonElement>document.getElementById("submitNameBtn");
-submitNameBtn.addEventListener("click", () => { joinGame(); })
-nameInput.addEventListener("keyup", (event) => {
-    if (event.key == "Enter"){
-        joinGame();
-    }
-})
+function setupEventListeners(){
+    submitNameBtn.addEventListener("click", () => { joinGame(); })
+    nameInput.addEventListener("keyup", (event) => {
+        if (event.key == "Enter"){
+            joinGame();
+        }
+    })
+}
 
 function joinGame(){
     name = nameInput.value

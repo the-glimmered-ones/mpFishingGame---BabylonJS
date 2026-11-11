@@ -46,23 +46,28 @@ async function serveRes(url: string, subfolder: string = ""){
     }
 }
 
-Bun.serve({
+const server = Bun.serve({
     port: PORT,
     hostname: HOST_NAME,
     routes: {
         "/": page,
-        // "/hi": new Response ("uck"),
         "/textures/ui/*": ({url}) => {return serveRes(url, "ui/")},
         "/textures/TropicalSunnyDay/*": ({url}) => {return serveRes(url, "TropicalSunnyDay/")},
         "/textures/*": ({url}) => {return serveRes(url)},
     },
-    async fetch(req, server) {
+    fetch(req, server) {
         // upgrade the request to a WebSocket
-        if (server.upgrade(req, { data: { client: new Client() } })) {
-            console.log("ugraded")
-            return; // do not return a Response
-        }
-        return new Response("Upgrade failed", { status: 500 });
+            const url = new URL(req.url);
+            if (url.pathname === "/") {
+                const upgraded = server.upgrade(req, { data: { client: new Client() } })
+                if (upgraded){
+                    console.log("upgraded")
+                    return; // do not return a Response
+                }
+                else{
+                    return new Response("Upgrade failed", { status: 500 });
+                }
+            }
     },
     error(error) {
         return new Response(`Error: ${error.message}`, { status: 404 });
@@ -70,27 +75,21 @@ Bun.serve({
   websocket: {
     data: {} as { client: Client },
     open: (ws) => {
-            console.log(clients.length)
-            //TODO: only add clients when sure its not just gonna disappear, after name submit? set a timeout?
+            //TODO: instead of the dupe stuff, return an error if the ip is already found in another client
             if (ws.data){ //DISABLED DUPE REPLACEMENT FOR LOCAL TESTING
                  ws.data.client.ws = ws
-            //     var dupedClient: Client = new Client();
-            //     if (clients.find((client) => { dupedClient = client; return ws.remoteAddress == client.ws.remoteAddress; })){
-            //         clients[clients.indexOf(dupedClient)] =  ws.data.client
-            //         nameList[clients.indexOf(dupedClient)] = ws.data.client.name
-            //         console.log("user replaced")
-            //     }
-            //     else{
-                    clients.push(ws.data.client)
-                    nameList.push(ws.data.client.name)
-                    console.log("user connect")
-                //}
-                console.log(clients.length)
-                ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_START_POSITIONS, lastPosUpdate)))
+                // var dupedClient: Client = new Client();
+                // if (clients.find((client) => { dupedClient = client; return ws.remoteAddress == client.ws.remoteAddress; })){
+                //     clients[clients.indexOf(dupedClient)] =  ws.data.client
+                //     nameList[clients.indexOf(dupedClient)] = ws.data.client.name
+                //     console.log("user replaced")
+                // }
+                // else{
+                clients.push(ws.data.client)
+                nameList.push(ws.data.client.name)
+                console.log("user connect")
+                ws.send(JSON.stringify(new ServerPacket(ServerPacketTypes.PLAYER_START_POSITIONS, lastPosUpdate)))                
             }
-            
-            
-            
             //console.log(clients)
         },
         close(ws) {

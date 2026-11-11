@@ -246908,7 +246908,7 @@ PBRCustomMaterial.ShaderIndexer = 1;
 RegisterClass("BABYLON.PBRCustomMaterial", PBRCustomMaterial);
 
 // client/src/game.ts
-var ws = new WebSocket("");
+var ws;
 var iframe;
 var doc = window.document;
 var canvas = document.createElement("canvas");
@@ -247325,11 +247325,6 @@ function startGame() {
   if (ws.readyState == ws.OPEN) {
     wsOpen = true;
     tryRender();
-  } else {
-    ws.addEventListener("open", () => {
-      wsOpen = true;
-      tryRender();
-    });
   }
   if (doc.readyState == "complete") {
     iframeLoaded = true;

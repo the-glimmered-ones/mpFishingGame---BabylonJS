@@ -4,7 +4,7 @@ import "babylonjs-gui";
 import "@babylonjs/materials/custom/customMaterial";
 import "@babylonjs/materials/custom/pbrCustomMaterial";
 import { RotationGizmo, TestBase64DataUrl } from "babylonjs";
-var ws: WebSocket = new WebSocket("");
+var ws: WebSocket;
 var iframe: HTMLIFrameElement;
 var doc: Document = window.document;
 //fixed loading times by hosting this file online and importing it when needed
@@ -498,13 +498,13 @@ function startGame(){
     wsOpen = true
     tryRender()
   }
-  else{
-    ws.addEventListener("open", () => {
-      //console.log("ws open")
-      wsOpen = true
-      tryRender()
-    })
-  }
+  // else{
+  //   ws.addEventListener("open", () => {
+  //     //console.log("ws open")
+  //     wsOpen = true
+  //     tryRender()
+  //   })
+  // }
 
   if (doc.readyState == "complete"){
     iframeLoaded = true
