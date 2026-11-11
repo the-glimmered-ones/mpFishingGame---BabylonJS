@@ -75,7 +75,7 @@ const server = Bun.serve({
   websocket: {
     data: {} as { client: Client },
     open: (ws) => {
-            //TODO: instead of the dupe stuff, return an error if the ip is already found in another client
+            //TODO: instead of the dupe stuff, show them an error if the ip is already found in another client
             if (ws.data){ //DISABLED DUPE REPLACEMENT FOR LOCAL TESTING
                  ws.data.client.ws = ws
                 // var dupedClient: Client = new Client();
@@ -84,7 +84,6 @@ const server = Bun.serve({
                 //     nameList[clients.indexOf(dupedClient)] = ws.data.client.name
                 //     console.log("user replaced")
                 // }
-                // else{
                 clients.push(ws.data.client)
                 nameList.push(ws.data.client.name)
                 console.log("user connect")
